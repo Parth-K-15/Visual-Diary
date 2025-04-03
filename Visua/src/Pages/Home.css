@@ -1,0 +1,106 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    height: 100vh;
+    /* background-color: #121212; */
+    /* background-color: #003459; */
+    /* background-color: #023047; */
+    background-color: #1c2541;
+}
+
+.navbar{
+    background: linear-gradient(90deg,
+    rgba(255, 255, 255, 1) 0%,
+    /* rgba(157, 168, 238, 1) 0%, */
+    rgba(205, 227, 241, 1) 39%,
+    rgba(157, 168, 238, 1) 99%);
+}
+
+.navbar-brand #Tit{
+    font-size: 1.25em;
+    /* font-family: cursive; */
+    font-family: "Raleway", sans-serif;
+}
+
+.nav-link.active {
+    font-weight: bold;
+    border-bottom: 3px solid red;
+}
+
+
+.swiper {
+    width: 100%;
+    height: 100%;
+}
+
+.slide-card {
+    background: linear-gradient(90deg,
+            rgba(157, 168, 238, 1) 0%,
+            rgba(205, 227, 241, 1) 39%,
+            rgba(255, 255, 255, 1) 99%);
+    box-shadow: 6px 7px 8px -7px #8a93fb;
+    margin: 35px 33px 50px;
+    /* padding: 45px 63px; */
+    padding: 25px 10px 35px 10px;
+    border-radius: 20px;
+    border: 0;
+    cursor: grab;
+    height: 85%;
+    width: 80%;
+    
+}
+
+.slide-card .slide-card-img-top {
+    /* max-height: 350px;
+    max-width: 400px; */
+    border-radius: 5%;
+    margin: 15px auto 0;
+    box-shadow: 0 8px 20px -4px #8a86e8;
+    width: 85%;
+    height: 95%;
+    /* object-fit: cover; */
+}
+
+.slide-card h5 {
+    color: #3345c6;
+    font-size: 25px;
+    font-weight: 700;
+    margin: 15px 0 5px 0;
+}
+
+.slide-card a{
+    text-decoration: none;
+}
+
+.slide-card h5 span {
+    font-size: 25px;
+    color: #111;
+}
+
+.slide-card p {
+    font-size: 18px;
+    color: #000;
+    padding-bottom: 15px;
+}
+
+.swiper-slide {
+    text-align: center;
+    font-size: 18px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    align-items: center;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+}
+
+/* transform active card  */
+.swiper-slide.swiper-slide-active {
+    transform: scale(1.2);
+}

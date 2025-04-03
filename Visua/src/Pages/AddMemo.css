@@ -1,0 +1,43 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    height: 100vh;
+    /* background-color: #121212; */
+    /* background-color: #003459; */
+    /* background-color: #023047; */
+    background-color: #1c2541;
+}
+
+.navbar{
+    background: linear-gradient(90deg,
+    rgba(255, 255, 255, 1) 0%,
+    /* rgba(157, 168, 238, 1) 0%, */
+    rgba(205, 227, 241, 1) 39%,
+    rgba(157, 168, 238, 1) 99%);
+}
+
+.navbar-brand #Tit{
+    font-size: 1.25em;
+    /* font-family: cursive; */
+    font-family: "Raleway", sans-serif;
+}
+
+.nav-link.active {
+    font-weight: bold;
+    border-bottom: 3px solid red;
+}
+
+.OuterContainer{
+    background: linear-gradient(90deg,
+            rgba(157, 168, 238, 1) 0%,
+            rgba(205, 227, 241, 1) 79%,
+            /* rgb(77, 161, 216) 99% */
+            rgba(157, 168, 238, 1) 99%
+            );
+    box-shadow: 6px 7px 8px -7px #8a93fb;
+    /* width: 90%; */
+}
