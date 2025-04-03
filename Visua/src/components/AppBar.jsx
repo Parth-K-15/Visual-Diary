@@ -16,6 +16,7 @@ import AdbIcon from '@mui/icons-material/Adb';
 import "./AppBarStyle.css";
 import { useLocation } from 'react-router-dom';
 
+
 // Update your pages array to match the routes:
 const pages = [
     { name: 'Home', path: '/' },
