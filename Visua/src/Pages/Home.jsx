@@ -18,10 +18,15 @@ function Home() {
             date: "28 Jan 2025"
         },
         {
-            img: "/images/Winner_Winner.jpg",
-            title: "Winner_Winner..",
-            date: "16 Oct 2024"
+            img: "/images/Rajesj_Sir.jpg",
+            title: "BirthDay Boyy....",
+            date: "24 Jan 2025"
         },
+        // {
+        //     img: "/images/Winner_Winner.jpg",
+        //     title: "Winner_Winner..",
+        //     date: "16 Oct 2024"
+        // },
         {
             img: "/images/Have_a_Break.jpg",
             title: "Have_a_Break",
