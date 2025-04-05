@@ -1,0 +1,9 @@
+login Page
+signup Page
+Home -> Updates
+Search -> Date
+Search -> Title
+Profile
+
+
+Add Memo 2nd Page
