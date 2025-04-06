@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import './Home.css'; // Keep your original CSS file
 import ResponsiveAppBar from "../components/AppBar";
 
-function Home() {
+function Home({ userData, handleLogout }) {
     const [swiperReady, setSwiperReady] = useState(false);
 
     const slides = [
@@ -85,25 +85,10 @@ function Home() {
 
     return (
         <div className="visual-diary-app">
-            {/* Preserved original header structure */}
-            {/* <header>
-                <nav className="navbar navbar-expand-md d-flex justify-content-between align-items-center px-3">
-                    <div className="container-fluid d-flex align-items-center">
-                        <Link className="navbar-brand ms-1 mt-1 d-flex align-items-center" to="/">
-                            <span className="fw-bold ms-2" id="Tit">Visual Diary</span>
-                        </Link>
-
-                        <div className="collapse navbar-collapse justify-content-end page me-4" id="navbarContent">
-                            <div className="navbar-nav">
-                                <Link to="/Home" className="nav-link char navbar-brand ms-4 mt-2">Home</Link>
-                                <Link to="/Home" className="nav-link char navbar-brand ms-4 mt-2">Memories</Link>
-                                <Link to="/AddMemo" className="nav-link Houses navbar-brand ms-4 mt-2">Add Memo</Link>
-                            </div>
-                        </div>
-                    </div>
-                </nav>
-            </header> */}
-            <ResponsiveAppBar/>
+            <ResponsiveAppBar
+                userData={userData}
+                onLogout={handleLogout}
+            />
 
             {/* Swiper with original class names */}
             <div className="swiper-container" style={{

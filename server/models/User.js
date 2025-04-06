@@ -6,17 +6,33 @@ class User {
     const hashedPassword = await bcrypt.hash(password, 10);
     const [result] = await pool.query(
       `INSERT INTO users 
-       (username, passwordd, email, first_name, last_name) 
+       (username, password, email, first_name, last_name) 
        VALUES (?, ?, ?, ?, ?)`,
       [username, hashedPassword, email, first_name, last_name]
     );
     return result.insertId;
   }
 
-  static async findByUsername(username) {
+  static async findByUsernameOrEmail(username, email) {
     const [rows] = await pool.query(
-      'SELECT * FROM users WHERE username = ?',
-      [username]
+      'SELECT * FROM users WHERE username = ? OR email = ?',
+      [username, email]
+    );
+    return rows[0];
+  }
+
+  static async findByEmail(email) {
+    const [rows] = await pool.query(
+      'SELECT * FROM users WHERE email = ?',
+      [email]
+    );
+    return rows[0];
+  }
+
+  static async findById(userId) {
+    const [rows] = await pool.query(
+      'SELECT user_id, username, email FROM users WHERE user_id = ?',
+      [userId]
     );
     return rows[0];
   }

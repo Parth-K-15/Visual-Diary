@@ -9,13 +9,15 @@ import {
     TextField,
     Typography,
     Link,
-    Grid
+    Grid,
+    Snackbar,
+    Alert
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 
-function SignUp({ onBack }) {
+function SignUp({ onBack, onSignIn }) {
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -25,6 +27,9 @@ function SignUp({ onBack }) {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState('info');
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -33,6 +38,10 @@ function SignUp({ onBack }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!formData.firstName || !formData.lastName) {
+            setError('First name and last name are required');
+            return;
+        }
         setLoading(true);
         setError('');
 
@@ -40,20 +49,25 @@ function SignUp({ onBack }) {
 
         try {
             const response = await axios.post('http://localhost:5000/api/auth/register', {
-                first_name: formData.firstName,
-                last_name: formData.lastName,
+                firstName: formData.firstName,  // Keep camelCase here
+                lastName: formData.lastName,
                 username: formData.username,
                 email: formData.email,
                 password: formData.password
             });
 
+            setSnackbarMessage('Registration successful! Redirecting to sign in...');
+            setSnackbarSeverity('success');
+            setSnackbarOpen(true);
+
             console.log('Registration successful:', response.data);
-            // Optionally redirect or show success message
-            alert('Registration successful!');
+
+            setTimeout(() => {
+                onSignIn();  // Call the onSignIn prop to switch components
+            }, 2000);
 
         } catch (err) {
-            console.error('Registration error:', err.response?.data?.message || err.message);
-            setError(err.response?.data?.message || 'Registration failed. Please try again.');
+            setSnackbarMessage(err.response?.data?.message || 'Registration failed. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -89,7 +103,7 @@ function SignUp({ onBack }) {
                 }}
             >
                 <CardContent sx={{ p: 4 }}>
-                    <Button
+                    {/* <Button
                         startIcon={<ArrowBackIcon />}
                         onClick={onBack}
                         sx={{
@@ -99,7 +113,7 @@ function SignUp({ onBack }) {
                         }}
                     >
                         Back
-                    </Button>
+                    </Button> */}
 
                     <Box
                         sx={{
@@ -294,10 +308,32 @@ function SignUp({ onBack }) {
 
                         <Typography variant="body1" align="center" sx={{ color: 'text.secondary' }}>
                             Already have an account?{' '}
-                            <Link href="#" underline="hover" sx={{ fontWeight: 600 }}>
+                            <Link
+                                // href="#" 
+                                component="button"
+                                underline="hover"
+                                sx={{ fontWeight: 600 }}
+                                onClick={(e) => {
+                                    // e.preventDefault();
+                                    onSignIn();
+                                }}>
                                 Sign In
                             </Link>
                         </Typography>
+                        <Snackbar
+                            open={snackbarOpen}
+                            autoHideDuration={3000}
+                            onClose={() => setSnackbarOpen(false)}
+                            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                        >
+                            <Alert
+                                onClose={() => setSnackbarOpen(false)}
+                                severity={snackbarSeverity}
+                                sx={{ width: '100%' }}
+                            >
+                                {snackbarMessage}
+                            </Alert>
+                        </Snackbar>
                     </Box>
                 </CardContent>
             </Card>

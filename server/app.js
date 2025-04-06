@@ -4,8 +4,6 @@ import cors from 'cors';
 import memoriesRouter from './routes/memories.js';
 import authRouter from './routes/auth.js';
 
-// Add this with other middleware
-app.use('/api/auth', authRouter);
 const app = express();
 
 // Middleware
@@ -14,5 +12,6 @@ app.use(bodyParser.json());
 
 // Routes
 app.use('/api', memoriesRouter);
+app.use('/api/auth', authRouter); // Moved after middleware but before error handlers
 
 export default app;

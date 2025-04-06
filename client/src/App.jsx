@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+// import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 // import { Routes, Route } from 'react-router-dom';
 import ResponsiveAppBar from './components/AppBar';
 import Home from './Pages/Home';
@@ -6,32 +6,24 @@ import AddMemo from './Pages/AddMemo';
 import AddMemo2 from './Pages/AddMemo2';
 import Traditional from './Pages/Traditional';
 import NotFound from './Pages/NotFound'; // Create this component
-import ProductHowItWorks from "../modules/views/ProductHowItWorks";
+// import ProductHowItWorks from './ProductHowItWorks';
+import ProductHowItWorks from '../modules/views/ProductHowItWorks';
 import SignUp from './components/SignUp';
+import SignIn from './components/SignIn';
 
-import {useState} from 'react';
+import { useState } from 'react';
 
 // function App() {
 //   return (
 //     <>
-//       {/* <div>Hello World
-//         <Router>
-//           <Routes>
-//             <Route path="/" element={<Home />} />
-//             <Route path="/memories" element={<Home />} />
-//             <Route path="/add-memo" element={<AddMemo />} />
-//             <Route path="*" element={<NotFound />} />
-//           </Routes>
-//         </Router>
-//       </div> */}
 //       <Home />
 //       <Traditional />
 //       <ProductHowItWorks />
 //       <SignUp />
+//       <SignIn />
 //       <AddMemo />
 //       <AddMemo2 />
 //       {/* <NotFound/> */}
-      
 //     </>
 //   );
 // }
@@ -40,27 +32,66 @@ import {useState} from 'react';
 
 
 
+
 function App() {
-  // State to track which component to show
   const [activeComponent, setActiveComponent] = useState('ProductHowItWorks');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userData, setUserData] = useState(null);
+
+  const handleSuccessfulLogin = (user) => {
+    setIsAuthenticated(true);
+    setUserData(user);
+    setActiveComponent('Home');
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setIsAuthenticated(false);
+    setUserData(null);
+    setActiveComponent('ProductHowItWorks');
+  };
 
   return (
-    <>
-      {/* <ResponsiveAppBar /> */}
-      
+    <div>
+      {/* Show the AppBar on all pages except ProductHowItWorks */}
+      {/* {activeComponent !== 'ProductHowItWorks' && (
+        <ResponsiveAppBar 
+          userData={userData} 
+          handleLogout={handleLogout} 
+        />
+      )} */}
+
       {/* Component Switcher */}
       {activeComponent === 'ProductHowItWorks' && (
-        <ProductHowItWorks 
-          onStartJournaling={() => setActiveComponent('SignUp')} 
+        <ProductHowItWorks
+          onStartJournaling={() => {
+            isAuthenticated 
+              ? setActiveComponent('Home')
+              : setActiveComponent('SignIn');
+          }}
         />
       )}
-      
+
       {activeComponent === 'SignUp' && (
-        <SignUp 
-          onBack={() => setActiveComponent('ProductHowItWorks')}
+        <SignUp
+          onSignIn={() => setActiveComponent('SignIn')}
         />
       )}
-    </>
+
+      {activeComponent === 'SignIn' && (
+        <SignIn
+          onSignUp={() => setActiveComponent('SignUp')}
+          onSuccessfulLogin={handleSuccessfulLogin}
+        />
+      )}
+
+      {activeComponent === 'Home' && (
+        <Home 
+          userData={userData}
+          handleLogout={handleLogout} 
+        />
+      )}
+    </div>
   );
 }
 
