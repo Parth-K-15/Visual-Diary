@@ -45,19 +45,23 @@ export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Find user by email
         const user = await User.findByEmail(email);
         if (!user) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        // Compare passwords
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        // Create JWT token
+        // DEBUG: Log the user data from database
+        console.log('User from DB:', {
+            id: user.user_id,
+            firstName: user.first_name, // Check if this exists
+            lastName: user.last_name
+        });
+
         const token = jwt.sign(
             { userId: user.user_id },
             process.env.JWT_SECRET,
@@ -68,7 +72,10 @@ export const login = async (req, res) => {
             message: 'Login successful',
             token,
             userId: user.user_id,
-            username: user.username
+            username: user.username,
+            firstName: user.first_name || null, // Force include even if undefined
+            lastName: user.last_name || null,
+            email: user.email
         });
 
     } catch (error) {

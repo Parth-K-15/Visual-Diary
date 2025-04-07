@@ -45,9 +45,20 @@ function ResponsiveAppBar({ userData, onLogout }) {
             }
         }
     ];
+    // Improved avatar letter logic
+    // const getAvatarLetter = () => {
+    //     if (userData?.firstName) return userData.firstName[0].toUpperCase();
+    //     if (userData?.username) {
+    //         // Extract first letter from username (handles cases like 'Parth-K-15')
+    //         const firstChar = userData.username.split('-')[0]?.[0] || userData.username[0];
+    //         return firstChar.toUpperCase();
+    //     }
+    //     return 'U';
+    // };
 
-    // Get first letter of first name for avatar
-    const avatarLetter = userData?.firstName?.charAt(0)?.toUpperCase() || 'U';
+    // const avatarLetter = getAvatarLetter();
+
+    const avatarLetter = userData?.firstName?.[0]?.toUpperCase() || '?';
 
     const handleOpenNavMenu = (event) => {
         setAnchorElNav(event.currentTarget);
@@ -63,6 +74,7 @@ function ResponsiveAppBar({ userData, onLogout }) {
     const handleCloseUserMenu = () => {
         setAnchorElUser(null);
     };
+
     const handleCloseSnackbar = (event, reason) => {
         if (reason === 'clickaway') {
             return;
@@ -72,8 +84,7 @@ function ResponsiveAppBar({ userData, onLogout }) {
 
     return (
         <>
-
-            <AppBar position="static" sx={{ backgroundColor: '#1c2541', boxShadow: 'none' }}>
+            <AppBar position="static" className="custom-appbar">
                 <Container maxWidth="xl">
                     <Toolbar disableGutters>
                         <PhotoAlbumIcon sx={{
@@ -148,7 +159,7 @@ function ResponsiveAppBar({ userData, onLogout }) {
                                             }
                                         }}
                                     >
-                                        <Typography textAlign="center">{page.name}</Typography>
+                                        <Typography sx={{ textAlign: 'center' }}>{page.name}</Typography>
                                     </MenuItem>
                                 ))}
                             </Menu>
@@ -180,24 +191,21 @@ function ResponsiveAppBar({ userData, onLogout }) {
                                 }
                             }}
                         >
-                            VISUAL DIARY
+                            Visual-Diary
                         </Typography>
 
                         {/* Desktop menu */}
-                        <Box sx={{
-                            flexGrow: 1,
-                            display: { xs: 'none', md: 'flex' },
-                            ml: 3
-                        }}>
+                        <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, ml: 3 }}>
                             {pages.map((page) => (
                                 <Button
                                     key={page.name}
                                     component={Link}
                                     to={page.path}
+                                    className="nav-item"
                                     onClick={handleCloseNavMenu}
                                     sx={{
                                         my: 2,
-                                        color: location.pathname === page.path ? '#5bc0be' : 'white',
+                                        color: location.pathname === page.path ? 'secondary.main' : 'white',
                                         display: 'block',
                                         mx: 1,
                                         fontWeight: location.pathname === page.path ? '600' : '400',
@@ -223,8 +231,11 @@ function ResponsiveAppBar({ userData, onLogout }) {
                                             transform: 'scale(1.1)',
                                             transition: 'transform 0.2s'
                                         }
-                                    }}
-                                >
+                                    }}>
+                                    {/* {console.log("User Data:", userData)}
+                                    {console.log("Avatar Letter:", avatarLetter)} */}
+                                    {console.log("Full userData in AppBar:", userData)}
+
                                     <Avatar
                                         sx={{
                                             backgroundColor: '#5bc0be',
@@ -290,6 +301,8 @@ function ResponsiveAppBar({ userData, onLogout }) {
                     </Toolbar>
                 </Container>
             </AppBar>
+
+            {/* Logout Snackbar */}
             <Snackbar
                 open={openSnackbar}
                 autoHideDuration={3000}
@@ -302,7 +315,10 @@ function ResponsiveAppBar({ userData, onLogout }) {
                     sx={{
                         width: '100%',
                         backgroundColor: '#5bc0be',
-                        color: '#1c2541'
+                        color: '#1c2541',
+                        // '& .MuiAlert-icon': {
+                        //     color: '#1c2541'
+                        // }
                     }}
                 >
                     Logging out...

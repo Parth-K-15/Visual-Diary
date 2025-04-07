@@ -38,11 +38,18 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userData, setUserData] = useState(null);
 
-  const handleSuccessfulLogin = (user) => {
+  const handleSuccessfulLogin = (response) => {
     setIsAuthenticated(true);
-    setUserData(user);
+    setUserData({
+        userId: response.userId,
+        username: response.username,
+        firstName: response.firstName,
+        lastName: response.lastName,
+        email: response.email
+    });
     setActiveComponent('Home');
-  };
+    console.log("Received firstName:", response.firstName);
+};
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -65,7 +72,7 @@ function App() {
       {activeComponent === 'ProductHowItWorks' && (
         <ProductHowItWorks
           onStartJournaling={() => {
-            isAuthenticated 
+            isAuthenticated
               ? setActiveComponent('Home')
               : setActiveComponent('SignIn');
           }}
@@ -86,9 +93,9 @@ function App() {
       )}
 
       {activeComponent === 'Home' && (
-        <Home 
+        <Home
           userData={userData}
-          handleLogout={handleLogout} 
+          handleLogout={handleLogout}
         />
       )}
     </div>

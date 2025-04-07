@@ -54,15 +54,17 @@ function SignIn({ onSignUp, onSuccessfulLogin }) {
             setSnackbarOpen(true);
             // Redirect to Home page
             // navigate('/Home');
-            setTimeout(() => {
-                onSuccessfulLogin({
-                    firstName: response.data.firstName,
-                    lastName: response.data.lastName,
-                    email: response.data.email
-                });
-            }, 2000);
+            onSuccessfulLogin({
+                userId: response.data.userId,
+                username: response.data.username,
+                firstName: response.data.firstName,
+                lastName: response.data.lastName,
+                email: response.data.email
+            });
+            console.log("API Response firstName:", response.data.firstName);
 
         } catch (err) {
+            console.error('Login error:', err.response?.data);
             setSnackbarMessage(err.response?.data?.message || 'Login failed. Please try again.');
             setSnackbarSeverity('error');
             setSnackbarOpen(true);

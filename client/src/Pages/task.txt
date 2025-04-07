@@ -1,11 +1,18 @@
-login Page
-signup Page
-Home -> Updates
+mongo connectivity
+memo page -> share or delete memo
+ubpage memory -> Share memory, Edit => edit and delete section or image
 Search -> Date
 Search -> Title
+Shared Memory
+Home -> feature updates, memory Updates
 Profile
+contact us
+memory encryption
 
 
+
+login Page
+signup Page
 Add Memo 2nd Page
 
 
