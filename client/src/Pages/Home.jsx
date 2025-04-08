@@ -9,7 +9,7 @@ function Home({ userData, handleLogout }) {
     const slides = [
         {
             img: "/images/Photography.jpg",
-            title: "Learning New Things...",
+            title: "Exploring...",
             date: "10 Mar 2025"
         },
         {
