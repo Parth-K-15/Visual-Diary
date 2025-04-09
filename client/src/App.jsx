@@ -48,8 +48,7 @@ function App() {
       lastName: response.lastName,
       email: response.email
     });
-    setActiveComponent('AddMemo');
-    console.log("Received firstName:", response.firstName);
+    setActiveComponent('AddMemo'); // Changed from 'AddMemo' to 'Home'
   };
 
   const handleLogout = () => {
@@ -61,8 +60,6 @@ function App() {
 
   return (
     <div>
-
-      {/* Component Switcher */}
       {activeComponent === 'ProductHowItWorks' && (
         <ProductHowItWorks
           onStartJournaling={() => {
@@ -76,6 +73,7 @@ function App() {
       {activeComponent === 'SignUp' && (
         <SignUp
           onSignIn={() => setActiveComponent('SignIn')}
+          onSuccessfulSignUp={handleSuccessfulLogin}
         />
       )}
 
@@ -90,15 +88,16 @@ function App() {
         <Home
           userData={userData}
           handleLogout={handleLogout}
+          onAddMemory={() => setActiveComponent('AddMemo')}
         />
       )}
 
       {activeComponent === 'AddMemo' && (
         <AddMemo
           onMemoryCreated={({ memoryId, filenameSafeTitle }) => {
-            setActiveComponent('AddMemo2');
-            // Store memory data in state or context
+            console.log('Received in App:', { memoryId, filenameSafeTitle });
             setMemoryData({ memoryId, filenameSafeTitle });
+            setActiveComponent('AddMemo2');
           }}
           onCancel={() => setActiveComponent('Home')}
         />
@@ -112,7 +111,6 @@ function App() {
           userData={userData}
         />
       )}
-
     </div>
   );
 }

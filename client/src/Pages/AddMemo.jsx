@@ -81,6 +81,8 @@ function AddMemo({ onMemoryCreated, onCancel }) {
       if (!response.ok) {
         throw new Error(result.message || 'Failed to save memory');
       }
+
+      console.log('Before calling onMemoryCreated', { memoryId: result.memoryId, filenameSafeTitle });
       
       // Call the parent component's callback with memoryId
       onMemoryCreated({

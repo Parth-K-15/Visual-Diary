@@ -11,22 +11,111 @@ import {
     IconButton,
     CircularProgress,
     Snackbar,
-    Alert
+    Alert,
+    Fade,
+    Slide,
+    Grow,
+    Zoom,
+    Avatar
 } from '@mui/material';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import MicIcon from '@mui/icons-material/Mic';
-import DeleteIcon from '@mui/icons-material/Delete';
+import {
+    AddCircleOutline as AddCircleOutlineIcon,
+    CloudUpload as CloudUploadIcon,
+    Mic as MicIcon,
+    Delete as DeleteIcon,
+    PhotoCamera as PhotoCameraIcon,
+    Description as DescriptionIcon,
+    Share as ShareIcon,
+    Edit as EditIcon
+} from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import ResponsiveAppBar from "../components/AppBar";
+import { styled } from '@mui/material/styles';
+
+
+const StyledCard = styled(Card)(({ theme }) => ({
+    width: '95%',
+    maxWidth: 900,
+    boxShadow: theme.shadows[10],
+    background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+    borderRadius: 16,
+    overflow: 'hidden',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+        transform: 'translateY(-2px)',
+        boxShadow: theme.shadows[12]
+    }
+}));
+
+const SectionContainer = styled(Box)(({ theme }) => ({
+    marginBottom: theme.spacing(4),
+    padding: theme.spacing(3),
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backdropFilter: 'blur(5px)',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+        boxShadow: '0 8px 15px rgba(0, 0, 0, 0.1)'
+    }
+}));
+
+const UploadButton = styled(Button)(({ theme }) => ({
+    height: 200,
+    border: '2px dashed',
+    borderColor: theme.palette.primary.main,
+    borderRadius: 12,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: theme.spacing(1),
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        borderColor: theme.palette.secondary.main
+    }
+}));
+
+const DescriptionField = styled(TextField)(({ theme }) => ({
+    '& .MuiOutlinedInput-root': {
+        borderRadius: 12,
+        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+        transition: 'all 0.3s ease',
+        '&:hover': {
+            backgroundColor: 'rgba(255, 255, 255, 0.9)'
+        },
+        '&.Mui-focused': {
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            boxShadow: `0 0 0 2px ${theme.palette.primary.light}`
+        }
+    },
+    '& .MuiInputBase-inputMultiline': {
+        height: '100% !important',
+        minHeight: '200px !important',
+        overflow: 'auto !important'
+    }
+}));
+
+const PulseDot = styled(Box)(({ theme }) => ({
+    width: 10,
+    height: 10,
+    borderRadius: '50%',
+    backgroundColor: theme.palette.error.main,
+    marginRight: theme.spacing(1),
+    animation: 'pulse 1.5s infinite ease-in-out'
+}));
 
 function AddMemo2({ memoryId, filenameSafeTitle, onComplete, userData }) {
-    const location = useLocation();
     const navigate = useNavigate();
     const [sections, setSections] = useState([{
         image: null,
         imagePreview: '',
         description: '',
+        caption: '',
         isRecording: false,
         interimTranscript: ''
     }]);
@@ -34,12 +123,12 @@ function AddMemo2({ memoryId, filenameSafeTitle, onComplete, userData }) {
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    // const [memoryId, setMemoryId] = useState(location.state?.memoryId || null);
+    const [activeSection, setActiveSection] = useState(0);
 
-    // Cleanup recognition on unmount
     useEffect(() => {
         if (!memoryId) {
-            navigate('/add-memory'); // Redirect if no memoryId
+            console.log('No memoryId, redirecting to /add-memory');
+            navigate('/add-memory');
         }
 
         return () => {
@@ -71,12 +160,21 @@ function AddMemo2({ memoryId, filenameSafeTitle, onComplete, userData }) {
         }
     };
 
+    const handleCaptionChange = (e, index) => {
+        const updatedSections = [...sections];
+        updatedSections[index] = {
+            ...updatedSections[index],
+            caption: e.target.value
+        };
+        setSections(updatedSections);
+    };
+
     const handleDescriptionChange = (e, index) => {
         const updatedSections = [...sections];
         updatedSections[index] = {
             ...updatedSections[index],
             description: e.target.value,
-            interimTranscript: ''
+            interimTranscript: '' // Clear interim transcript when typing manually
         };
         setSections(updatedSections);
     };
@@ -184,6 +282,7 @@ function AddMemo2({ memoryId, filenameSafeTitle, onComplete, userData }) {
             isRecording: false,
             interimTranscript: ''
         }]);
+        setActiveSection(sections.length);
     };
 
     const deleteSection = (index) => {
@@ -195,6 +294,7 @@ function AddMemo2({ memoryId, filenameSafeTitle, onComplete, userData }) {
         const updatedSections = [...sections];
         updatedSections.splice(index, 1);
         setSections(updatedSections);
+        setActiveSection(Math.max(0, index - 1));
         showMessage("Section deleted");
     };
 
@@ -209,7 +309,6 @@ function AddMemo2({ memoryId, filenameSafeTitle, onComplete, userData }) {
         try {
             const token = localStorage.getItem('token');
 
-            // Save each section
             for (let i = 0; i < sections.length; i++) {
                 const section = sections[i];
                 const formData = new FormData();
@@ -233,8 +332,6 @@ function AddMemo2({ memoryId, filenameSafeTitle, onComplete, userData }) {
             }
 
             showMessage("Memory saved successfully!");
-            // Redirect to home or memory view after a delay
-            // setTimeout(() => navigate('/'), 2000);
             onComplete();
         } catch (error) {
             console.error('Error saving memory:', error);
@@ -250,197 +347,381 @@ function AddMemo2({ memoryId, filenameSafeTitle, onComplete, userData }) {
                 userData={userData}
                 onLogout={() => {
                     localStorage.removeItem('token');
-                    onComplete(); // or navigate to login
+                    onComplete();
                 }}
             />
+
             <Box sx={{
                 display: 'flex',
                 justifyContent: 'center',
                 my: 4,
                 minHeight: '100vh',
                 p: { xs: 1, md: 3 },
+                background: 'linear-gradient(to bottom, #e0eafc, #cfdef3)'
             }}>
-                <Card sx={{
-                    width: '95%',
-                    maxWidth: 900,
-                    boxShadow: 3,
-                    background: 'linear-gradient(90deg, rgba(157, 168, 238, 1) 0%, rgba(205, 227, 241, 1) 39%, rgba(255, 255, 255, 1) 99%)',
-                    p: { sm: 3, xs: 1, md: 1 }
-                }}>
-                    <CardContent sx={{ p: { xs: 1, md: 3 }, mt: { xs: 2 } }}>
-                        <Typography variant="h5" sx={{
-                            color: 'primary.main',
-                            fontWeight: 'bold',
-                            mb: 2
-                        }}>
-                            Add Memory Details
-                        </Typography>
-                        <Divider variant="middle" sx={{
-                            mb: 1,
-                            color: 'black',
-                            width: '100%',
-                            fontWeight: 'bold'
-                        }} />
+                <Fade in={true} timeout={800}>
+                    <StyledCard>
+                        <CardContent sx={{ p: { xs: 1, md: 3 }, mt: { xs: 2 } }}>
+                            <motion.div
+                                initial={{ opacity: 0, y: -20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5 }}
+                            >
+                                <Typography variant="h4" sx={{
+                                    color: 'primary.main',
+                                    fontWeight: 'bold',
+                                    mb: 2,
+                                    textAlign: 'center',
+                                    fontFamily: '"Montserrat", sans-serif'
+                                }}>
+                                    Create Your Memory
+                                </Typography>
+                                <Divider sx={{
+                                    mb: 3,
+                                    background: 'linear-gradient(to right, transparent, #3f51b5, transparent)',
+                                    height: 2
+                                }} />
+                            </motion.div>
 
-                        {sections.map((section, index) => (
-                            <Box key={index} sx={{ mb: 4, p: 2, position: 'relative' }}>
-                                {sections.length > 1 && (
-                                    <IconButton
-                                        onClick={() => deleteSection(index)}
+                            {sections.map((section, index) => (
+                                <Grow in={true} timeout={500 + (index * 200)} key={index}>
+                                    <SectionContainer sx={{
+                                        display: activeSection === index ? 'block' : 'none',
+                                        position: 'relative'
+                                    }}>
+                                        {sections.length > 1 && (
+                                            <Zoom in={true}>
+                                                <IconButton
+                                                    onClick={() => deleteSection(index)}
+                                                    sx={{
+                                                        position: 'absolute',
+                                                        right: 16,
+                                                        top: 16,
+                                                        color: 'error.main',
+                                                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                                        '&:hover': {
+                                                            backgroundColor: 'rgba(255, 0, 0, 0.1)'
+                                                        },
+                                                        zIndex: 1
+                                                    }}
+                                                >
+                                                    <DeleteIcon />
+                                                </IconButton>
+                                            </Zoom>
+                                        )}
+
+                                        <Grid container spacing={3}>
+                                            <Grid item xs={12} md={4}>
+                                                {section.imagePreview ? (
+                                                    <Box sx={{ position: 'relative' }}>
+                                                        <motion.div
+                                                            initial={{ scale: 0.9 }}
+                                                            animate={{ scale: 1 }}
+                                                            transition={{ duration: 0.3 }}
+                                                        >
+                                                            <Box sx={{
+                                                                mb: 2,
+                                                                border: '1px solid rgba(0, 0, 0, 0.1)',
+                                                                borderRadius: 12,
+                                                                display: 'flex',
+                                                                justifyContent: 'center',
+                                                                alignItems: 'center',
+                                                                height: 200,
+                                                                overflow: 'hidden',
+                                                                position: 'relative',
+                                                                boxShadow: 3
+                                                            }}>
+                                                                <img
+                                                                    src={section.imagePreview}
+                                                                    alt={`Preview ${index + 1}`}
+                                                                    style={{
+                                                                        width: '100%',
+                                                                        height: '100%',
+                                                                        objectFit: 'cover',
+                                                                        transition: 'transform 0.3s ease'
+                                                                    }}
+                                                                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                                                                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                                                />
+                                                                <Box sx={{
+                                                                    position: 'absolute',
+                                                                    top: 8,
+                                                                    right: 8,
+                                                                    zIndex: 1
+                                                                }}>
+                                                                    <IconButton
+                                                                        component="label"
+                                                                        color="primary"
+                                                                        sx={{
+                                                                            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                                                            '&:hover': {
+                                                                                backgroundColor: 'rgba(255, 255, 255, 1)'
+                                                                            }
+                                                                        }}
+                                                                    >
+                                                                        <EditIcon />
+                                                                        <input
+                                                                            type="file"
+                                                                            hidden
+                                                                            accept="image/*"
+                                                                            onChange={(e) => handleImageChange(e, index)}
+                                                                        />
+                                                                    </IconButton>
+                                                                </Box>
+                                                            </Box>
+                                                        </motion.div>
+                                                        <TextField
+                                                            fullWidth
+                                                            label={`Caption for Image ${index + 1}`}
+                                                            variant="outlined"
+                                                            value={section.caption}
+                                                            onChange={(e) => handleCaptionChange(e, index)}
+                                                            sx={{
+                                                                mt: 1,
+                                                                width: {
+                                                                    xs: '120%',
+                                                                    sm: '100%',
+                                                                    md: '100%',
+                                                                    lg: '100%',
+                                                                },
+                                                                '& .MuiOutlinedInput-root': {
+                                                                    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                                                                    borderRadius: 2
+                                                                }
+                                                            }}
+                                                        />
+                                                    </Box>
+                                                ) : (
+                                                    <motion.div
+                                                        whileHover={{ scale: 1.02 }}
+                                                        whileTap={{ scale: 0.98 }}
+                                                    >
+                                                        <UploadButton
+                                                            component="label"
+                                                            variant="outlined"
+                                                            fullWidth
+                                                        >
+                                                            <PhotoCameraIcon sx={{ fontSize: 40, color: 'primary.main' }} />
+                                                            <Typography variant="body2" color="textSecondary">
+                                                                Click to upload image
+                                                            </Typography>
+                                                            <input
+                                                                type="file"
+                                                                hidden
+                                                                accept="image/*"
+                                                                onChange={(e) => handleImageChange(e, index)}
+                                                            />
+                                                        </UploadButton>
+                                                    </motion.div>
+                                                )}
+                                            </Grid>
+
+                                            <Grid item xs={12} md={8}>
+                                                <motion.div
+                                                    initial={{ opacity: 0, x: 20 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    transition={{ delay: 0.2 }}
+                                                >
+                                                    <DescriptionField
+                                                        label={`Memory Description ${index + 1}`}
+                                                        multiline
+                                                        rows={12}
+                                                        variant="outlined"
+                                                        fullWidth
+                                                        value={section.description + (section.interimTranscript ? ' ' + section.interimTranscript : '')}
+                                                        onChange={(e) => handleDescriptionChange(e, index)}
+                                                        sx={{
+                                                            width: {
+                                                                xs: '140%',
+                                                                sm: '200%',
+                                                                md: '250%',
+                                                                lg: '250%',
+                                                            },
+                                                            '& .MuiInputBase-root': {
+                                                                height: '100%',
+                                                                minHeight: '300px'
+                                                            }
+                                                        }}
+                                                        InputProps={{
+                                                            endAdornment: (
+                                                                <Box sx={{
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    position: 'absolute',
+                                                                    bottom: 8,
+                                                                    right: 8
+                                                                }}>
+                                                                    {section.isRecording && (
+                                                                        <>
+                                                                            <CircularProgress size={20} color="error" sx={{ mr: 1 }} />
+                                                                            <PulseDot />
+                                                                        </>
+                                                                    )}
+                                                                    <motion.div
+                                                                        whileHover={{ scale: 1.1 }}
+                                                                        whileTap={{ scale: 0.9 }}
+                                                                    >
+                                                                        <IconButton
+                                                                            onClick={() => toggleSpeechRecognition(index)}
+                                                                            color={section.isRecording ? "error" : "default"}
+                                                                            sx={{
+                                                                                backgroundColor: section.isRecording ? 'rgba(244, 67, 54, 0.1)' : 'rgba(63, 81, 181, 0.1)',
+                                                                                '&:hover': {
+                                                                                    backgroundColor: section.isRecording ? 'rgba(244, 67, 54, 0.2)' : 'rgba(63, 81, 181, 0.2)'
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            <MicIcon />
+                                                                        </IconButton>
+                                                                    </motion.div>
+                                                                </Box>
+                                                            )
+                                                        }}
+                                                    />
+                                                </motion.div>
+                                            </Grid>
+                                        </Grid>
+                                    </SectionContainer>
+                                </Grow>
+                            ))}
+
+                            <Box sx={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                mt: 4,
+                                p: 1
+                            }}>
+                                <motion.div
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    <Button
+                                        variant="contained"
+                                        color="secondary"
+                                        startIcon={<AddCircleOutlineIcon />}
+                                        onClick={addNewSection}
                                         sx={{
-                                            position: 'absolute',
-                                            right: 3,
-                                            bottom: 60,
-                                            color: 'error.main',
-                                            backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                                            '&:hover': {
-                                                backgroundColor: 'rgba(255, 0, 0, 0.1)'
-                                            }
+                                            px: 4,
+                                            py: 1.5,
+                                            borderRadius: 8,
+                                            fontWeight: 'bold'
                                         }}
                                     >
-                                        <DeleteIcon />
-                                    </IconButton>
-                                )}
+                                        Add Section
+                                    </Button>
+                                </motion.div>
 
-                                <Grid container spacing={3}>
-                                    <Grid item xs={12} md={4} mr={3}>
-                                        {section.imagePreview && (
-                                            <Box sx={{
-                                                mb: 2,
-                                                border: '1px dashed grey',
-                                                borderRadius: 1,
-                                                display: 'flex',
-                                                justifyContent: 'center',
-                                                alignItems: 'center',
-                                                minHeight: 200,
-                                                overflow: 'hidden',
-                                                p: 1
-                                            }}>
-                                                <img
-                                                    src={section.imagePreview}
-                                                    alt={`Preview ${index + 1}`}
-                                                    style={{
-                                                        maxWidth: '100%',
-                                                        maxHeight: '100%',
-                                                        objectFit: 'contain'
+                                <Box sx={{ display: 'flex', gap: 2 }}>
+                                    {sections.length > 1 && (
+                                        <Button
+                                            variant="outlined"
+                                            color="primary"
+                                            onClick={() => setActiveSection(prev => Math.max(0, prev - 1))}
+                                            disabled={activeSection === 0}
+                                            sx={{
+                                                px: 4,
+                                                py: 1.5,
+                                                borderRadius: 8,
+                                                fontWeight: 'bold'
+                                            }}
+                                        >
+                                            Previous
+                                        </Button>
+                                    )}
+
+                                    {activeSection < sections.length - 1 ? (
+                                        <Button
+                                            variant="outlined"
+                                            color="primary"
+                                            onClick={() => setActiveSection(prev => Math.min(sections.length - 1, prev + 1))}
+                                            sx={{
+                                                px: 4,
+                                                py: 1.5,
+                                                borderRadius: 8,
+                                                fontWeight: 'bold'
+                                            }}
+                                        >
+                                            Next
+                                        </Button>
+                                    ) : (
+                                        <motion.div
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                        >
+                                            <Button
+                                                variant="contained"
+                                                color="primary"
+                                                onClick={handleShare}
+                                                disabled={isSubmitting || sections.some(s => !s.image || !s.description)}
+                                                sx={{
+                                                    px: 4,
+                                                    py: 1.5,
+                                                    borderRadius: 8,
+                                                    fontWeight: 'bold',
+                                                    background: 'linear-gradient(45deg, #3f51b5 30%, #2196f3 90%)',
+                                                    boxShadow: '0 3px 5px 2px rgba(33, 150, 243, .3)'
+                                                }}
+                                                startIcon={<ShareIcon />}
+                                            >
+                                                {isSubmitting ? (
+                                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                        <CircularProgress size={24} color="inherit" sx={{ mr: 1 }} />
+                                                        Saving...
+                                                    </Box>
+                                                ) : 'Share Memory'}
+                                            </Button>
+                                        </motion.div>
+                                    )}
+                                </Box>
+                            </Box>
+
+                            {sections.length > 1 && (
+                                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3, gap: 1 }}>
+                                    {sections.map((_, idx) => (
+                                        <motion.div
+                                            key={idx}
+                                            whileHover={{ scale: 1.2 }}
+                                            whileTap={{ scale: 0.9 }}
+                                        >
+                                            <IconButton
+                                                onClick={() => setActiveSection(idx)}
+                                                sx={{
+                                                    p: 0,
+                                                    color: activeSection === idx ? 'primary.main' : 'text.secondary'
+                                                }}
+                                            >
+                                                <Avatar
+                                                    sx={{
+                                                        width: 12,
+                                                        height: 12,
+                                                        backgroundColor: activeSection === idx ? 'primary.main' : 'action.disabled'
                                                     }}
                                                 />
-                                            </Box>
-                                        )}
-                                        <Button
-                                            component="label"
-                                            variant="outlined"
-                                            startIcon={<CloudUploadIcon />}
-                                            fullWidth
-                                            sx={{ p: 1.5 }}
-                                        >
-                                            Upload Image
-                                            <input
-                                                type="file"
-                                                hidden
-                                                accept="image/*"
-                                                onChange={(e) => handleImageChange(e, index)}
-                                            />
-                                        </Button>
-                                    </Grid>
-
-                                    <Grid item xs={12} md={8}>
-                                        <TextField
-                                            className='Textfield-Description'
-                                            label={`Description ${index + 1}`}
-                                            multiline
-                                            rows={10}
-                                            variant="outlined"
-                                            value={section.description + (section.interimTranscript ? ' ' + section.interimTranscript : '')}
-                                            onChange={(e) => handleDescriptionChange(e, index)}
-                                            sx={{
-                                                width: {
-                                                    xs: '140%',
-                                                    sm: '200%',
-                                                    md: '250%',
-                                                    lg: '250%',
-                                                },
-                                                '& .MuiInputBase-root': {
-                                                    height: '100%',
-                                                    alignItems: 'flex-start',
-                                                    p: 1
-                                                },
-                                                '& .MuiInputBase-inputMultiline': {
-                                                    height: '100%',
-                                                    overflow: 'auto'
-                                                }
-                                            }}
-                                            InputProps={{
-                                                endAdornment: (
-                                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                                        {section.isRecording && (
-                                                            <>
-                                                                <CircularProgress size={24} color="error" sx={{ mr: 1 }} />
-                                                                <Box sx={{
-                                                                    width: 10,
-                                                                    height: 10,
-                                                                    borderRadius: '50%',
-                                                                    bgcolor: 'error.main',
-                                                                    mr: 1,
-                                                                    animation: 'pulse 1s infinite'
-                                                                }} />
-                                                            </>
-                                                        )}
-                                                        <IconButton
-                                                            onClick={() => toggleSpeechRecognition(index)}
-                                                            color={section.isRecording ? "error" : "default"}
-                                                            sx={{
-                                                                p: 1,
-                                                                bgcolor: section.isRecording ? 'rgba(244, 67, 54, 0.1)' : 'transparent'
-                                                            }}
-                                                        >
-                                                            <MicIcon />
-                                                        </IconButton>
-                                                    </Box>
-                                                )
-                                            }}
-                                        />
-                                    </Grid>
-                                </Grid>
-                                {index < sections.length - 1 && <Divider sx={{ my: 3 }} />}
-                            </Box>
-                        ))}
-
-                        <Box sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            mt: 3,
-                            p: 1
-                        }}>
-                            <Button
-                                variant="contained"
-                                color="secondary"
-                                startIcon={<AddCircleOutlineIcon />}
-                                onClick={addNewSection}
-                                sx={{ px: 3, py: 1.5 }}
-                            >
-                                Add Section
-                            </Button>
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                onClick={handleShare}
-                                disabled={isSubmitting || sections.some(s => !s.image || !s.description)}
-                                sx={{ px: 3, py: 1.5 }}
-                            >
-                                {isSubmitting ? 'Saving...' : 'Share Memory'}
-                            </Button>
-                        </Box>
-                    </CardContent>
-                </Card>
+                                            </IconButton>
+                                        </motion.div>
+                                    ))}
+                                </Box>
+                            )}
+                        </CardContent>
+                    </StyledCard>
+                </Fade>
 
                 <Snackbar
                     open={snackbarOpen}
                     autoHideDuration={3000}
                     onClose={() => setSnackbarOpen(false)}
                     anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                    TransitionComponent={Slide}
                 >
-                    <Alert onClose={() => setSnackbarOpen(false)} severity="info">
+                    <Alert
+                        onClose={() => setSnackbarOpen(false)}
+                        severity="info"
+                        sx={{
+                            width: '100%',
+                            boxShadow: 3,
+                            borderRadius: 2
+                        }}
+                    >
                         {snackbarMessage}
                     </Alert>
                 </Snackbar>
@@ -448,9 +729,14 @@ function AddMemo2({ memoryId, filenameSafeTitle, onComplete, userData }) {
 
             <style jsx global>{`
                 @keyframes pulse {
-                    0% { opacity: 1; }
-                    50% { opacity: 0.5; }
-                    100% { opacity: 1; }
+                    0% { opacity: 1; transform: scale(1); }
+                    50% { opacity: 0.5; transform: scale(1.2); }
+                    100% { opacity: 1; transform: scale(1); }
+                }
+                
+                body {
+                    background: linear-gradient(to bottom, #e0eafc, #cfdef3);
+                    font-family: 'Roboto', sans-serif;
                 }
             `}</style>
         </>
