@@ -17,8 +17,8 @@ import { useState } from 'react';
 //   return (
 //     <>
 //       <Home />
-//       <Traditional />
 //       <ProductHowItWorks />
+//       <Traditional />
 //       <SignUp />
 //       <SignIn />
 //       <AddMemo />
@@ -41,15 +41,15 @@ function App() {
   const handleSuccessfulLogin = (response) => {
     setIsAuthenticated(true);
     setUserData({
-        userId: response.userId,
-        username: response.username,
-        firstName: response.firstName,
-        lastName: response.lastName,
-        email: response.email
+      userId: response.userId,
+      username: response.username,
+      firstName: response.firstName,
+      lastName: response.lastName,
+      email: response.email
     });
-    setActiveComponent('Home');
+    setActiveComponent('AddMemo');
     console.log("Received firstName:", response.firstName);
-};
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -60,20 +60,13 @@ function App() {
 
   return (
     <div>
-      {/* Show the AppBar on all pages except ProductHowItWorks */}
-      {/* {activeComponent !== 'ProductHowItWorks' && (
-        <ResponsiveAppBar 
-          userData={userData} 
-          handleLogout={handleLogout} 
-        />
-      )} */}
-
+      
       {/* Component Switcher */}
       {activeComponent === 'ProductHowItWorks' && (
         <ProductHowItWorks
           onStartJournaling={() => {
             isAuthenticated
-              ? setActiveComponent('Home')
+              ? setActiveComponent('AddMemo')
               : setActiveComponent('SignIn');
           }}
         />
@@ -98,6 +91,17 @@ function App() {
           handleLogout={handleLogout}
         />
       )}
+
+      {activeComponent === 'AddMemo' && (
+        <AddMemo
+          onMemoryCreated={(memoryId) => {
+            setActiveComponent('AddMemo2');
+            // You can store the memoryId in state or context if needed
+          }}
+          onCancel={() => setActiveComponent('Home')}
+        />
+      )}
+      
     </div>
   );
 }

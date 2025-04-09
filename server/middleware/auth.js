@@ -5,6 +5,7 @@ import User from '../models/User.js';
 export const authenticate = async (req, res, next) => {
     try {
         const token = req.header('Authorization')?.replace('Bearer ', '');
+        console.log('Received token:', token);
         
         if (!token) {
             return res.status(401).json({ message: 'Authentication required' });

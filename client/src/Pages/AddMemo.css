@@ -41,3 +41,7 @@ body {
     box-shadow: 6px 7px 8px -7px #8a93fb;
     /* width: 90%; */
 }
+
+.dateInput{
+    width: 101%;
+}
