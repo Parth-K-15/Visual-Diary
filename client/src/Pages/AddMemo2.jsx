@@ -16,10 +16,13 @@ import {
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import MicIcon from '@mui/icons-material/Mic';
-import DeleteIcon from '@mui/icons-material/Delete'; // Added delete icon
+import DeleteIcon from '@mui/icons-material/Delete';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ResponsiveAppBar from "../components/AppBar";
 
-function AddMemo2() {
+function AddMemo2({ memoryId, filenameSafeTitle, onComplete, userData }) {
+    const location = useLocation();
+    const navigate = useNavigate();
     const [sections, setSections] = useState([{
         image: null,
         imagePreview: '',
@@ -30,15 +33,21 @@ function AddMemo2() {
     const recognitionRef = useRef(null);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    // const [memoryId, setMemoryId] = useState(location.state?.memoryId || null);
 
     // Cleanup recognition on unmount
     useEffect(() => {
+        if (!memoryId) {
+            navigate('/add-memory'); // Redirect if no memoryId
+        }
+
         return () => {
             if (recognitionRef.current) {
                 recognitionRef.current.stop();
             }
         };
-    }, []);
+    }, [memoryId, navigate]);
 
     const showMessage = (message) => {
         setSnackbarMessage(message);
@@ -67,7 +76,7 @@ function AddMemo2() {
         updatedSections[index] = {
             ...updatedSections[index],
             description: e.target.value,
-            interimTranscript: '' // Clear interim when typing manually
+            interimTranscript: ''
         };
         setSections(updatedSections);
     };
@@ -84,7 +93,6 @@ function AddMemo2() {
                 recognitionRef.current.stop();
                 showMessage("Recording stopped");
 
-                // Save interim transcript to final description
                 updatedSections[index] = {
                     ...updatedSections[index],
                     description: updatedSections[index].description +
@@ -157,7 +165,6 @@ function AddMemo2() {
 
         recognizer.onend = () => {
             if (sections[index].isRecording) {
-                // Automatically restart if still supposed to be recording
                 recognizer.start();
             }
         };
@@ -179,7 +186,6 @@ function AddMemo2() {
         }]);
     };
 
-    // New function to delete a section
     const deleteSection = (index) => {
         if (sections.length <= 1) {
             showMessage("You need at least one section");
@@ -192,14 +198,61 @@ function AddMemo2() {
         showMessage("Section deleted");
     };
 
-    const handleShare = () => {
-        console.log("Data to be saved:", sections);
-        alert("Memory saved successfully! (Backend integration coming soon)");
+    const handleShare = async () => {
+        if (sections.some(s => !s.image || !s.description)) {
+            showMessage("Please fill all sections completely");
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        try {
+            const token = localStorage.getItem('token');
+
+            // Save each section
+            for (let i = 0; i < sections.length; i++) {
+                const section = sections[i];
+                const formData = new FormData();
+                formData.append('image', section.image);
+                formData.append('sectionNumber', i + 1);
+                formData.append('description', section.description);
+                formData.append('caption', section.caption || '');
+                formData.append('filenameSafeTitle', filenameSafeTitle);
+
+                const response = await fetch(`http://localhost:5000/api/memories/${memoryId}/sections`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to save section ${i + 1}`);
+                }
+            }
+
+            showMessage("Memory saved successfully!");
+            // Redirect to home or memory view after a delay
+            // setTimeout(() => navigate('/'), 2000);
+            onComplete();
+        } catch (error) {
+            console.error('Error saving memory:', error);
+            showMessage(error.message);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
         <>
-            <ResponsiveAppBar />
+            <ResponsiveAppBar
+                userData={userData}
+                onLogout={() => {
+                    localStorage.removeItem('token');
+                    onComplete(); // or navigate to login
+                }}
+            />
             <Box sx={{
                 display: 'flex',
                 justifyContent: 'center',
@@ -212,7 +265,7 @@ function AddMemo2() {
                     maxWidth: 900,
                     boxShadow: 3,
                     background: 'linear-gradient(90deg, rgba(157, 168, 238, 1) 0%, rgba(205, 227, 241, 1) 39%, rgba(255, 255, 255, 1) 99%)',
-                    p: {sm:3, xs:1,md:1}
+                    p: { sm: 3, xs: 1, md: 1 }
                 }}>
                     <CardContent sx={{ p: { xs: 1, md: 3 }, mt: { xs: 2 } }}>
                         <Typography variant="h5" sx={{
@@ -231,7 +284,6 @@ function AddMemo2() {
 
                         {sections.map((section, index) => (
                             <Box key={index} sx={{ mb: 4, p: 2, position: 'relative' }}>
-                                {/* Delete button - positioned top right */}
                                 {sections.length > 1 && (
                                     <IconButton
                                         onClick={() => deleteSection(index)}
@@ -239,7 +291,6 @@ function AddMemo2() {
                                             position: 'absolute',
                                             right: 3,
                                             bottom: 60,
-                                            // ml: 3,
                                             color: 'error.main',
                                             backgroundColor: 'rgba(255, 255, 255, 0.7)',
                                             '&:hover': {
@@ -304,9 +355,9 @@ function AddMemo2() {
                                             onChange={(e) => handleDescriptionChange(e, index)}
                                             sx={{
                                                 width: {
-                                                    xs: '140%',      // 0px - 599px (Mobile)
-                                                    sm: '200%',      // 600px - 899px (Small tablets)
-                                                    md: '250%',      // 900px - 1199px (Tablets)
+                                                    xs: '140%',
+                                                    sm: '200%',
+                                                    md: '250%',
                                                     lg: '250%',
                                                 },
                                                 '& .MuiInputBase-root': {
@@ -374,10 +425,10 @@ function AddMemo2() {
                                 variant="contained"
                                 color="primary"
                                 onClick={handleShare}
-                                disabled={sections.some(s => !s.image || !s.description)}
+                                disabled={isSubmitting || sections.some(s => !s.image || !s.description)}
                                 sx={{ px: 3, py: 1.5 }}
                             >
-                                Share Memory
+                                {isSubmitting ? 'Saving...' : 'Share Memory'}
                             </Button>
                         </Box>
                     </CardContent>
@@ -396,12 +447,12 @@ function AddMemo2() {
             </Box>
 
             <style jsx global>{`
-        @keyframes pulse {
-          0% { opacity: 1; }
-          50% { opacity: 0.5; }
-          100% { opacity: 1; }
-        }
-      `}</style>
+                @keyframes pulse {
+                    0% { opacity: 1; }
+                    50% { opacity: 0.5; }
+                    100% { opacity: 1; }
+                }
+            `}</style>
         </>
     );
 }

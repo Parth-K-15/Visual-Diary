@@ -37,6 +37,7 @@ function App() {
   const [activeComponent, setActiveComponent] = useState('ProductHowItWorks');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userData, setUserData] = useState(null);
+  const [memoryData, setMemoryData] = useState(null);
 
   const handleSuccessfulLogin = (response) => {
     setIsAuthenticated(true);
@@ -60,7 +61,7 @@ function App() {
 
   return (
     <div>
-      
+
       {/* Component Switcher */}
       {activeComponent === 'ProductHowItWorks' && (
         <ProductHowItWorks
@@ -94,14 +95,24 @@ function App() {
 
       {activeComponent === 'AddMemo' && (
         <AddMemo
-          onMemoryCreated={(memoryId) => {
+          onMemoryCreated={({ memoryId, filenameSafeTitle }) => {
             setActiveComponent('AddMemo2');
-            // You can store the memoryId in state or context if needed
+            // Store memory data in state or context
+            setMemoryData({ memoryId, filenameSafeTitle });
           }}
           onCancel={() => setActiveComponent('Home')}
         />
       )}
-      
+
+      {activeComponent === 'AddMemo2' && memoryData && (
+        <AddMemo2
+          memoryId={memoryData.memoryId}
+          filenameSafeTitle={memoryData.filenameSafeTitle}
+          onComplete={() => setActiveComponent('Home')}
+          userData={userData}
+        />
+      )}
+
     </div>
   );
 }

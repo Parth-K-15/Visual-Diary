@@ -83,7 +83,10 @@ function AddMemo({ onMemoryCreated, onCancel }) {
       }
       
       // Call the parent component's callback with memoryId
-      onMemoryCreated(result.memoryId);
+      onMemoryCreated({
+        memoryId: result.memoryId,
+        filenameSafeTitle: filenameSafeTitle
+    });
     } catch (error) {
       console.error('Error saving memory:', error);
       alert(error.message);
