@@ -315,8 +315,19 @@ function AddMemo2({ memoryId, filenameSafeTitle, onComplete, userData }) {
                 formData.append('image', section.image);
                 formData.append('sectionNumber', i + 1);
                 formData.append('description', section.description);
-                formData.append('caption', section.caption || '');
+                formData.append('caption', section.caption || `Section ${i + 1}`);
                 formData.append('filenameSafeTitle', filenameSafeTitle);
+
+                console.log('Sending section:', {
+                    sectionNumber: i + 1,
+                    filenameSafeTitle,
+                    hasImage: !!section.image
+                });
+
+                console.log('FormData entries:');
+                for (const [key, value] of formData.entries()) {
+                    console.log(key, value);
+                }
 
                 const response = await fetch(`http://localhost:5000/api/memories/${memoryId}/sections`, {
                     method: 'POST',
@@ -325,6 +336,14 @@ function AddMemo2({ memoryId, filenameSafeTitle, onComplete, userData }) {
                     },
                     body: formData
                 });
+
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    throw new Error(text || 'Server returned non-JSON response');
+                }
+
+                const result = await response.json();
 
                 if (!response.ok) {
                     throw new Error(`Failed to save section ${i + 1}`);

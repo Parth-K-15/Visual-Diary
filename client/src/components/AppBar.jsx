@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { Link } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
@@ -15,54 +14,40 @@ import MenuItem from '@mui/material/MenuItem';
 import PhotoAlbumIcon from '@mui/icons-material/PhotoAlbum';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
-import { useLocation } from 'react-router-dom';
 import "./AppBarStyle.css";
 
-const pages = [
-    // { name: 'Home', path: '/' },
-    { name: 'Memories', path: '/' },
-    { name: 'Add Memo', path: '/add-memo' },
-    { name: 'Search', path: '/search' }
-];
-
-function ResponsiveAppBar({ userData, onLogout }) {
-    const location = useLocation();
+function ResponsiveAppBar({ userData, onLogout, navigateTo, currentComponent }) {
     const [anchorElNav, setAnchorElNav] = React.useState(null);
     const [anchorElUser, setAnchorElUser] = React.useState(null);
     const [openSnackbar, setOpenSnackbar] = React.useState(false);
+    
+    const pages = [
+        { name: 'Memory', path: 'Home' },
+        { name: 'Add Memo', path: 'AddMemo' },
+        { name: 'Shared Memo', path: 'SharedMemo' },
+        { name: 'Search', path: 'Search' }
+    ];
 
     const settings = [
-        { name: 'Profile', icon: '👤', action: () => { } },
+        { name: 'Profile', icon: '👤', action: () => navigateTo('Profile') },
         {
             name: 'Logout',
             icon: '🚪',
             action: () => {
                 setOpenSnackbar(true);
-                // Delay the actual logout to let user see the message
                 setTimeout(() => {
                     onLogout();
                 }, 1000);
             }
         }
     ];
-    // Improved avatar letter logic
-    // const getAvatarLetter = () => {
-    //     if (userData?.firstName) return userData.firstName[0].toUpperCase();
-    //     if (userData?.username) {
-    //         // Extract first letter from username (handles cases like 'Parth-K-15')
-    //         const firstChar = userData.username.split('-')[0]?.[0] || userData.username[0];
-    //         return firstChar.toUpperCase();
-    //     }
-    //     return 'U';
-    // };
-
-    // const avatarLetter = getAvatarLetter();
 
     const avatarLetter = userData?.firstName?.[0]?.toUpperCase() || '?';
 
     const handleOpenNavMenu = (event) => {
         setAnchorElNav(event.currentTarget);
     };
+
     const handleOpenUserMenu = (event) => {
         setAnchorElUser(event.currentTarget);
     };
@@ -90,13 +75,12 @@ function ResponsiveAppBar({ userData, onLogout }) {
                         <PhotoAlbumIcon sx={{
                             display: { xs: 'none', md: 'flex' },
                             mr: 1,
-                            color: '#5bc0be' // Teal accent color
+                            color: '#5bc0be'
                         }} />
                         <Typography
                             variant="h6"
                             noWrap
-                            component={Link}
-                            to="/"
+                            onClick={() => navigateTo('Home')}
                             sx={{
                                 mr: 2,
                                 display: { xs: 'none', md: 'flex' },
@@ -106,7 +90,8 @@ function ResponsiveAppBar({ userData, onLogout }) {
                                 color: '#ffffff',
                                 textDecoration: 'none',
                                 '&:hover': {
-                                    color: '#5bc0be'
+                                    color: '#5bc0be',
+                                    cursor: 'pointer'
                                 }
                             }}
                         >
@@ -150,16 +135,17 @@ function ResponsiveAppBar({ userData, onLogout }) {
                                 {pages.map((page) => (
                                     <MenuItem
                                         key={page.name}
-                                        onClick={handleCloseNavMenu}
-                                        component={Link}
-                                        to={page.path}
+                                        onClick={() => {
+                                            handleCloseNavMenu();
+                                            navigateTo(page.path);
+                                        }}
                                         sx={{
                                             '&:hover': {
                                                 backgroundColor: '#2a3655'
                                             }
                                         }}
                                     >
-                                        <Typography sx={{ textAlign: 'center' }}>{page.name}</Typography>
+                                        <Typography textAlign="center">{page.name}</Typography>
                                     </MenuItem>
                                 ))}
                             </Menu>
@@ -174,8 +160,7 @@ function ResponsiveAppBar({ userData, onLogout }) {
                         <Typography
                             variant="h5"
                             noWrap
-                            component={Link}
-                            to="/"
+                            onClick={() => navigateTo('Home')}
                             sx={{
                                 mr: 2,
                                 display: { xs: 'flex', md: 'none' },
@@ -187,7 +172,8 @@ function ResponsiveAppBar({ userData, onLogout }) {
                                 textDecoration: 'none',
                                 fontSize: '1.1rem',
                                 '&:hover': {
-                                    color: '#5bc0be'
+                                    color: '#5bc0be',
+                                    cursor: 'pointer'
                                 }
                             }}
                         >
@@ -199,16 +185,16 @@ function ResponsiveAppBar({ userData, onLogout }) {
                             {pages.map((page) => (
                                 <Button
                                     key={page.name}
-                                    component={Link}
-                                    to={page.path}
-                                    className="nav-item"
-                                    onClick={handleCloseNavMenu}
+                                    onClick={() => {
+                                        handleCloseNavMenu();
+                                        navigateTo(page.path);
+                                    }}
                                     sx={{
                                         my: 2,
-                                        color: location.pathname === page.path ? 'secondary.main' : 'white',
+                                        color: currentComponent === page.path ? 'secondary.main' : 'white',
                                         display: 'block',
                                         mx: 1,
-                                        fontWeight: location.pathname === page.path ? '600' : '400',
+                                        fontWeight: currentComponent === page.path ? '600' : '400',
                                         '&:hover': {
                                             color: '#5bc0be',
                                             backgroundColor: 'transparent'
@@ -232,10 +218,6 @@ function ResponsiveAppBar({ userData, onLogout }) {
                                             transition: 'transform 0.2s'
                                         }
                                     }}>
-                                    {/* {console.log("User Data:", userData)}
-                                    {console.log("Avatar Letter:", avatarLetter)} */}
-                                    {console.log("Full userData in AppBar:", userData)}
-
                                     <Avatar
                                         sx={{
                                             backgroundColor: '#5bc0be',
@@ -302,7 +284,6 @@ function ResponsiveAppBar({ userData, onLogout }) {
                 </Container>
             </AppBar>
 
-            {/* Logout Snackbar */}
             <Snackbar
                 open={openSnackbar}
                 autoHideDuration={3000}
@@ -316,9 +297,6 @@ function ResponsiveAppBar({ userData, onLogout }) {
                         width: '100%',
                         backgroundColor: '#5bc0be',
                         color: '#1c2541',
-                        // '& .MuiAlert-icon': {
-                        //     color: '#1c2541'
-                        // }
                     }}
                 >
                     Logging out...

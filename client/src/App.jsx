@@ -19,9 +19,11 @@ import { useState } from 'react';
 //       <Home />
 //       <ProductHowItWorks />
 //       <Traditional />
+//       <br />
 //       <SignUp />
 //       <SignIn />
 //       <AddMemo />
+//       <br />
 //       <AddMemo2 />
 //       {/* <NotFound/> */}
 //     </>
@@ -48,7 +50,11 @@ function App() {
       lastName: response.lastName,
       email: response.email
     });
-    setActiveComponent('AddMemo'); // Changed from 'AddMemo' to 'Home'
+    setActiveComponent('AddMemo');
+  };
+
+  const navigateTo = (component) => {
+    setActiveComponent(component);
   };
 
   const handleLogout = () => {
@@ -60,6 +66,7 @@ function App() {
 
   return (
     <div>
+      {/* Landing Page */}
       {activeComponent === 'ProductHowItWorks' && (
         <ProductHowItWorks
           onStartJournaling={() => {
@@ -70,6 +77,7 @@ function App() {
         />
       )}
 
+      {/* Authentication Pages */}
       {activeComponent === 'SignUp' && (
         <SignUp
           onSignIn={() => setActiveComponent('SignIn')}
@@ -84,32 +92,43 @@ function App() {
         />
       )}
 
-      {activeComponent === 'Home' && (
-        <Home
-          userData={userData}
-          handleLogout={handleLogout}
-          onAddMemory={() => setActiveComponent('AddMemo')}
-        />
-      )}
+      {/* Authenticated Pages */}
+      {isAuthenticated && (
+        <>
+          {activeComponent === 'Home' && (
+            <Home
+              userData={userData}
+              handleLogout={handleLogout}
+              onAddMemory={() => setActiveComponent('AddMemo')}
+              navigateTo={navigateTo}
+            />
+          )}
 
-      {activeComponent === 'AddMemo' && (
-        <AddMemo
-          onMemoryCreated={({ memoryId, filenameSafeTitle }) => {
-            console.log('Received in App:', { memoryId, filenameSafeTitle });
-            setMemoryData({ memoryId, filenameSafeTitle });
-            setActiveComponent('AddMemo2');
-          }}
-          onCancel={() => setActiveComponent('Home')}
-        />
-      )}
+          {activeComponent === 'AddMemo' && (
+            <AddMemo
+              onMemoryCreated={({ memoryId, filenameSafeTitle }) => {
+                setMemoryData({ memoryId, filenameSafeTitle });
+                setActiveComponent('AddMemo2');
+              }}
+              onCancel={() => setActiveComponent('Home')}
+              onComplete={() => setActiveComponent('Home')}
+              userData={userData}
+              navigateTo={navigateTo}
+              onLogout={handleLogout}
+            />
+          )}
 
-      {activeComponent === 'AddMemo2' && memoryData && (
-        <AddMemo2
-          memoryId={memoryData.memoryId}
-          filenameSafeTitle={memoryData.filenameSafeTitle}
-          onComplete={() => setActiveComponent('Home')}
-          userData={userData}
-        />
+          {activeComponent === 'AddMemo2' && memoryData && (
+            <AddMemo2
+              memoryId={memoryData.memoryId}
+              filenameSafeTitle={memoryData.filenameSafeTitle}
+              onComplete={() => setActiveComponent('Home')}
+              userData={userData}
+              onLogout={handleLogout}
+              navigateTo={navigateTo}
+            />
+          )}
+        </>
       )}
     </div>
   );
