@@ -31,6 +31,7 @@ import {
   Title as TitleIcon
 } from '@mui/icons-material';
 import ResponsiveAppBar from '../components/AppBar';
+import { jwtDecode } from 'jwt-decode';  // Add this import at the top
 
 // Styled components
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -129,54 +130,66 @@ function AddMemo({ onMemoryCreated, onCancel, onComplete, userData, navigateTo, 
   const handleSubmit = async () => {
     const title = document.getElementById('title').value;
     const date = document.getElementById('dateInput').value;
-
+  
     if (!title || !date) {
       showMessage('Please provide a title and date');
       return;
     }
-
+  
     if (!imageFile) {
       showMessage('Please upload a cover image');
       return;
     }
-
+  
     setIsSubmitting(true);
-
-    // Create filename-safe title
-    const filenameSafeTitle = title
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
-
-    // Prepare form data
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('filenameSafeTitle', filenameSafeTitle);
-    formData.append('date', date);
-    formData.append('isPrivate', privacy === 'private');
-    formData.append('image', imageFile);
-
+  
     try {
       const token = localStorage.getItem('token');
+      
+      // Get file extension from the original file
+      const fileExt = imageFile.name.split('.').pop().toLowerCase();
+      
+      // Sanitize the title to create a filename-safe version
+      const filenameSafeTitle = title
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '-')  // Replace special chars with hyphens
+        .replace(/-+/g, '-')         // Replace multiple hyphens with single
+        .replace(/^-|-$/g, '');      // Remove leading/trailing hyphens
+  
+      const desiredFilename = `${filenameSafeTitle}.${fileExt}`;
+  
+      // Convert image to base64 for Cloudinary
+      const imageBase64 = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.readAsDataURL(imageFile);
+      });
+  
       const response = await fetch('http://localhost:5000/api/memories', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
-        body: formData
+        body: JSON.stringify({
+          title,
+          date,
+          isPrivate: privacy === 'private',
+          previewImage: imageBase64,
+          desiredFilename  // Send the desired filename to backend
+        })
       });
-
+  
       const result = await response.json();
-
+  
       if (!response.ok) {
         throw new Error(result.message || 'Failed to save memory');
       }
-
+  
       showMessage('Memory created successfully!');
       onMemoryCreated({
         memoryId: result.memoryId,
-        filenameSafeTitle: filenameSafeTitle
+        previewImageUrl: result.previewImageUrl
       });
     } catch (error) {
       console.error('Error saving memory:', error);
@@ -230,7 +243,7 @@ function AddMemo({ onMemoryCreated, onCancel, onComplete, userData, navigateTo, 
               </motion.div>
 
               <ResponsiveGrid container spacing={3}>
-                <Grid item xs={12} md={6} sx={{mr:2, ml:2}}>
+                <Grid item xs={12} md={6} sx={{ mr: 2, ml: 2 }}>
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -247,7 +260,7 @@ function AddMemo({ onMemoryCreated, onCancel, onComplete, userData, navigateTo, 
                           <TitleIcon color="action" sx={{ mr: 1 }} />
                         )
                       }}
-                      sx={{ mb: 3, mr:5 }}
+                      sx={{ mb: 3, mr: 5 }}
                     />
                   </motion.div>
 

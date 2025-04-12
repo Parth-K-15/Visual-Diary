@@ -106,8 +106,8 @@ function App() {
 
           {activeComponent === 'AddMemo' && (
             <AddMemo
-              onMemoryCreated={({ memoryId, filenameSafeTitle }) => {
-                setMemoryData({ memoryId, filenameSafeTitle });
+              onMemoryCreated={({ memoryId, previewImageUrl }) => {
+                setMemoryData({ memoryId, previewImageUrl });
                 setActiveComponent('AddMemo2');
               }}
               onCancel={() => setActiveComponent('Home')}

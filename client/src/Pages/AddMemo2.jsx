@@ -32,7 +32,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ResponsiveAppBar from "../components/AppBar";
 import { styled } from '@mui/material/styles';
-
+import { jwtDecode } from 'jwt-decode';
 
 const StyledCard = styled(Card)(({ theme }) => ({
     width: '95%',
@@ -299,35 +299,42 @@ function AddMemo2({ memoryId, filenameSafeTitle, onComplete, userData }) {
     };
 
     const handleShare = async () => {
+        debugger;
         if (sections.some(s => !s.image || !s.description)) {
             showMessage("Please fill all sections completely");
             return;
         }
+        
 
         setIsSubmitting(true);
 
         try {
             const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
 
+            if (!memoryId) {
+                throw new Error('Memory ID not found');
+            }
+
+            debugger;
+
+            // Upload each section
             for (let i = 0; i < sections.length; i++) {
                 const section = sections[i];
+
+                debugger;
+                
+                // Create form data to send
                 const formData = new FormData();
-                formData.append('image', section.image);
                 formData.append('sectionNumber', i + 1);
                 formData.append('description', section.description);
                 formData.append('caption', section.caption || `Section ${i + 1}`);
-                formData.append('filenameSafeTitle', filenameSafeTitle);
+                formData.append('sectionImage', section.image);
+                formData.append('desiredFilename', `section-${Date.now()}-${i + 1}`);
 
-                console.log('Sending section:', {
-                    sectionNumber: i + 1,
-                    filenameSafeTitle,
-                    hasImage: !!section.image
-                });
-
-                console.log('FormData entries:');
-                for (const [key, value] of formData.entries()) {
-                    console.log(key, value);
-                }
+                debugger;
 
                 const response = await fetch(`http://localhost:5000/api/memories/${memoryId}/sections`, {
                     method: 'POST',
@@ -337,16 +344,11 @@ function AddMemo2({ memoryId, filenameSafeTitle, onComplete, userData }) {
                     body: formData
                 });
 
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    const text = await response.text();
-                    throw new Error(text || 'Server returned non-JSON response');
-                }
-
-                const result = await response.json();
+                debugger;
 
                 if (!response.ok) {
-                    throw new Error(`Failed to save section ${i + 1}`);
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `Failed to save section ${i + 1}`);
                 }
             }
 
@@ -354,7 +356,7 @@ function AddMemo2({ memoryId, filenameSafeTitle, onComplete, userData }) {
             onComplete();
         } catch (error) {
             console.error('Error saving memory:', error);
-            showMessage(error.message);
+            showMessage(error.message || 'Failed to save memory');
         } finally {
             setIsSubmitting(false);
         }
