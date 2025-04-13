@@ -4,7 +4,7 @@ import axios from 'axios';
 import ResponsiveAppBar from "../../components/AppBar";
 import './SharedMemories.css';
 
-export default function SharedMemories({ userData, handleLogout }) {
+export default function SharedMemories({ userData, handleLogout, navigateTo }) {
   const [memories, setMemories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -36,11 +36,16 @@ export default function SharedMemories({ userData, handleLogout }) {
 
   return (
     <div className="shared-memories-page">
-      <ResponsiveAppBar userData={userData} onLogout={handleLogout} />
-      
+      <ResponsiveAppBar
+        userData={userData}
+        onLogout={handleLogout}
+        navigateTo={navigateTo}
+        currentComponent="SharedMemo"
+      />
+
       <div className="shared-memories-container">
         <h2>Memories Shared With You</h2>
-        
+
         {memories.length === 0 ? (
           <p>No memories have been shared with you yet.</p>
         ) : (
@@ -48,8 +53,8 @@ export default function SharedMemories({ userData, handleLogout }) {
             {memories.map(memory => (
               <div key={memory.memory_id} className="memory-card">
                 <Link to={`/memory/${memory.memory_id}`}>
-                  <img 
-                    src={memory.preview_image_url} 
+                  <img
+                    src={memory.preview_image_url}
                     alt={memory.title}
                     onError={(e) => e.target.src = '/images/default-memory.jpg'}
                   />

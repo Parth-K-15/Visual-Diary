@@ -1,17 +1,17 @@
 // import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 // import { Routes, Route } from 'react-router-dom';
-import ResponsiveAppBar from './components/AppBar';
-import Home from './Pages/Home';
-import AddMemo from './Pages/AddMemo';
-import AddMemo2 from './Pages/AddMemo2';
-import Traditional from './Pages/Traditional';
-import NotFound from './Pages/NotFound'; // Create this component
-// import ProductHowItWorks from './ProductHowItWorks';
-import ProductHowItWorks from '../modules/views/ProductHowItWorks';
-import SignUp from './components/SignUp';
-import SignIn from './components/SignIn';
+// import ResponsiveAppBar from './components/AppBar';
+// import Home from './Pages/Home';
+// import AddMemo from './Pages/AddMemo';
+// import AddMemo2 from './Pages/AddMemo2';
+// import Traditional from './Pages/Traditional';
+// import NotFound from './Pages/NotFound'; // Create this component
+// // import ProductHowItWorks from './ProductHowItWorks';
+// import ProductHowItWorks from '../modules/views/ProductHowItWorks';
+// import SignUp from './components/SignUp';
+// import SignIn from './components/SignIn';
 
-import { useState } from 'react';
+// import { useState } from 'react';
 
 // function App() {
 //   return (
@@ -34,12 +34,28 @@ import { useState } from 'react';
 
 
 
+import { useState } from 'react';
+import ResponsiveAppBar from './components/AppBar';
+import Home from './Pages/Home';
+import AddMemo from './Pages/AddMemo';
+import AddMemo2 from './Pages/AddMemo2';
+import ProductHowItWorks from '../modules/views/ProductHowItWorks';
+import SignUp from './components/SignUp';
+import SignIn from './components/SignIn';
+import MemoryDetail from './Pages/MemoryDetail';
+import SharedMemory from './Pages/SharedMemory'; // Add this import
 
 function App() {
   const [activeComponent, setActiveComponent] = useState('ProductHowItWorks');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userData, setUserData] = useState(null);
   const [memoryData, setMemoryData] = useState(null);
+  const [selectedMemoryId, setSelectedMemoryId] = useState(null);
+
+  const navigateTo = (component, memoryId = null) => {
+    setSelectedMemoryId(memoryId);
+    setActiveComponent(component);
+  };
 
   const handleSuccessfulLogin = (response) => {
     setIsAuthenticated(true);
@@ -53,15 +69,20 @@ function App() {
     setActiveComponent('Home');
   };
 
-  const navigateTo = (component) => {
-    setActiveComponent(component);
-  };
-
   const handleLogout = () => {
     localStorage.removeItem('token');
     setIsAuthenticated(false);
     setUserData(null);
-    setActiveComponent('ProductHowItWorks');
+    // setActiveComponent('ProductHowItWorks');
+    navigateTo('ProductHowItWorks');
+  };
+
+  // Shared props for all components
+  const sharedProps = {
+    navigateTo,
+    userData,
+    handleLogout,
+    isAuthenticated
   };
 
   return (
@@ -71,8 +92,8 @@ function App() {
         <ProductHowItWorks
           onStartJournaling={() => {
             isAuthenticated
-              ? setActiveComponent('AddMemo')
-              : setActiveComponent('SignIn');
+              ? navigateTo('AddMemo')
+              : navigateTo('SignIn');
           }}
         />
       )}
@@ -80,14 +101,14 @@ function App() {
       {/* Authentication Pages */}
       {activeComponent === 'SignUp' && (
         <SignUp
-          onSignIn={() => setActiveComponent('SignIn')}
+          onSignIn={() => navigateTo('SignIn')}
           onSuccessfulSignUp={handleSuccessfulLogin}
         />
       )}
 
       {activeComponent === 'SignIn' && (
         <SignIn
-          onSignUp={() => setActiveComponent('SignUp')}
+          onSignUp={() => navigateTo('SignUp')}
           onSuccessfulLogin={handleSuccessfulLogin}
         />
       )}
@@ -97,35 +118,62 @@ function App() {
         <>
           {activeComponent === 'Home' && (
             <Home
-              userData={userData}
-              handleLogout={handleLogout}
-              onAddMemory={() => setActiveComponent('AddMemo')}
-              navigateTo={navigateTo}
+              {...sharedProps}
+              currentComponent="Home"
+              onAddMemory={() => navigateTo('AddMemo')}
+              onMemoryClick={(action) => {
+                if (action === 'create') {
+                  navigateTo('AddMemo');
+                } else {
+                  navigateTo('MemoryDetail', action); // assuming action is memoryId for details
+                }
+              }}
+            />
+          )}
+
+          {activeComponent === 'MemoryDetail' && (
+            <MemoryDetail
+              {...sharedProps}
+              memoryId={selectedMemoryId}
+              onBack={() => navigateTo('Home')}
             />
           )}
 
           {activeComponent === 'AddMemo' && (
             <AddMemo
+              {...sharedProps}
+              currentComponent="AddMemo"
               onMemoryCreated={({ memoryId, previewImageUrl }) => {
                 setMemoryData({ memoryId, previewImageUrl });
-                setActiveComponent('AddMemo2');
+                navigateTo('AddMemo2');
               }}
-              onCancel={() => setActiveComponent('Home')}
-              onComplete={() => setActiveComponent('Home')}
-              userData={userData}
-              navigateTo={navigateTo}
-              onLogout={handleLogout}
+              onCancel={() => navigateTo('Home')}
+              onComplete={() => navigateTo('Home')}
             />
           )}
 
           {activeComponent === 'AddMemo2' && memoryData && (
             <AddMemo2
+              {...sharedProps}
+              currentComponent="AddMemo2"
               memoryId={memoryData.memoryId}
               filenameSafeTitle={memoryData.filenameSafeTitle}
-              onComplete={() => setActiveComponent('Home')}
-              userData={userData}
-              onLogout={handleLogout}
-              navigateTo={navigateTo}
+              onComplete={() => navigateTo('Home')}
+            />
+          )}
+
+          {activeComponent === 'SharedMemo' && (
+            <SharedMemory
+              {...sharedProps}
+              currentComponent="SharedMemo"
+              onMemoryClick={(memoryId) => navigateTo('MemoryDetail', memoryId)}
+            />
+          )}
+
+          {activeComponent === 'Traditional' && (
+            <Traditional
+              {...sharedProps}
+              currentComponent="Traditional"
             />
           )}
         </>

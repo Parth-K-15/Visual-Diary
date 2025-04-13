@@ -67,6 +67,15 @@ function ResponsiveAppBar({ userData, onLogout, navigateTo, currentComponent }) 
         setOpenSnackbar(false);
     };
 
+    const handleNavItemClick = (path) => {
+        handleCloseNavMenu();
+    if (typeof navigateTo === 'function') {
+      navigateTo(path);
+    } else {
+      console.warn('Navigation function not available');
+    }
+    };
+
     return (
         <>
             <AppBar position="static" className="custom-appbar">
@@ -135,10 +144,7 @@ function ResponsiveAppBar({ userData, onLogout, navigateTo, currentComponent }) 
                                 {pages.map((page) => (
                                     <MenuItem
                                         key={page.name}
-                                        onClick={() => {
-                                            handleCloseNavMenu();
-                                            navigateTo(page.path);
-                                        }}
+                                        onClick={() => handleNavItemClick(page.path)}
                                         sx={{
                                             '&:hover': {
                                                 backgroundColor: '#2a3655'
@@ -185,10 +191,7 @@ function ResponsiveAppBar({ userData, onLogout, navigateTo, currentComponent }) 
                             {pages.map((page) => (
                                 <Button
                                     key={page.name}
-                                    onClick={() => {
-                                        handleCloseNavMenu();
-                                        navigateTo(page.path);
-                                    }}
+                                    onClick={() => handleNavItemClick(page.path)}
                                     sx={{
                                         my: 2,
                                         color: currentComponent === page.path ? 'secondary.main' : 'white',

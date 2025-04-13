@@ -93,7 +93,7 @@ const ResponsiveGrid = styled(Grid)(({ theme }) => ({
   }
 }));
 
-function AddMemo({ onMemoryCreated, onCancel, onComplete, userData, navigateTo, onLogout }) {
+function AddMemo({ onMemoryCreated, onCancel, onComplete, userData, navigateTo, onLogout, handleLogout, currentComponent }) {
   const [imagePreview, setImagePreview] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const [privacy, setPrivacy] = useState('private');
@@ -201,11 +201,11 @@ function AddMemo({ onMemoryCreated, onCancel, onComplete, userData, navigateTo, 
 
   return (
     <>
-      <ResponsiveAppBar
-        userData={userData}
-        onLogout={onLogout}
+      <ResponsiveAppBar 
+        userData={userData} 
+        onLogout={handleLogout} 
         navigateTo={navigateTo}
-        currentComponent="AddMemo"
+        currentComponent={currentComponent}
       />
 
       <Box sx={{

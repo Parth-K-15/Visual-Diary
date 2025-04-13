@@ -4,9 +4,9 @@ import './Home.css';
 import ResponsiveAppBar from "../components/AppBar";
 import axios from 'axios';
 
-function Home({ userData, handleLogout, navigateTo, onMemoryClick }) {
+function SharedMemory({ userData, handleLogout, navigateTo, onMemoryClick }) {
     const [swiperReady, setSwiperReady] = useState(false);
-    const [memories, setMemories] = useState([]);
+    const [sharedMemories, setSharedMemories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -16,13 +16,14 @@ function Home({ userData, handleLogout, navigateTo, onMemoryClick }) {
     const [memoryToShare, setMemoryToShare] = useState(null);
     const [shareEmail, setShareEmail] = useState('');
     const [sharePermission, setSharePermission] = useState('viewer');
+    const [permissions, setPermissions] = useState({}); // { memory_id: { canEdit: boolean } }
 
     const handleDeleteClick = (memory, e) => {
         e.preventDefault();
         e.stopPropagation();
         setMemoryToDelete(memory);
         setShowDeleteModal(true);
-        setShowDropdown(null); // Close dropdown when opening delete modal
+        setShowDropdown(null);
     };
 
     const handleDeleteMemory = async () => {
@@ -37,7 +38,7 @@ function Home({ userData, handleLogout, navigateTo, onMemoryClick }) {
             );
 
             if (response.status === 200) {
-                setMemories(memories.filter(m => m.memory_id !== memoryToDelete.memory_id));
+                setSharedMemories(sharedMemories.filter(m => m.memory_id !== memoryToDelete.memory_id));
                 setShowDeleteModal(false);
             }
         } catch (error) {
@@ -74,53 +75,52 @@ function Home({ userData, handleLogout, navigateTo, onMemoryClick }) {
     };
 
     useEffect(() => {
-        const fetchMemories = async () => {
+        const fetchSharedMemories = async () => {
             try {
-                setLoading(true);
-                setError(null);
-                const backendBaseUrl = 'http://localhost:5000';
-                const endpoint = userData
-                    ? `${backendBaseUrl}/api/memories`
-                    : `${backendBaseUrl}/api/memories/public`;
-
-                const config = {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                        'Accept': 'application/json'
-                    }
-                };
-
-                const response = await axios.get(endpoint, config);
-                const memoriesData = Array.isArray(response.data) ? response.data : [];
-
-                const formattedMemories = memoriesData.map(memory => ({
-                    ...memory,
-                    formattedDate: memory.formattedDate ||
-                        new Date(memory.memory_date).toLocaleDateString('en-GB', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric'
-                        })
-                }));
-
-                setMemories(formattedMemories);
-            } catch (err) {
-                console.error('Error fetching memories:', err);
-                setError(err.response?.data?.message || err.message || 'Failed to load memories');
-                if (err.response?.status === 401) {
-                    handleLogout();
+              setLoading(true);
+              setError(null);
+              
+              const response = await axios.get(
+                'http://localhost:5000/api/memories/shared',
+                {
+                  headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Accept': 'application/json'
+                  }
                 }
+              );
+          
+              // Destructure the response properly
+              const { memories, permissions } = response.data;
+          
+              const formattedMemories = memories.map(memory => ({
+                ...memory,
+                formattedDate: memory.formattedDate ||
+                  new Date(memory.memory_date).toLocaleDateString('en-GB', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                  })
+              }));
+          
+              setSharedMemories(formattedMemories);
+              setPermissions(permissions);
+            } catch (err) {
+              console.error('Error fetching shared memories:', err);
+              setError(err.response?.data?.message || 'Failed to load shared memories');
             } finally {
-                setLoading(false);
+              setLoading(false);
             }
-        };
+          };
 
-        fetchMemories();
+        if (userData) {
+            fetchSharedMemories();
+        }
     }, [userData, handleLogout]);
 
     useEffect(() => {
         const initSwiper = () => {
-            if (window.Swiper && memories.length > 0) {
+            if (window.Swiper && sharedMemories.length > 0) {
                 new window.Swiper('.swiper', {
                     slidesPerView: 1,
                     centeredSlides: true,
@@ -165,13 +165,13 @@ function Home({ userData, handleLogout, navigateTo, onMemoryClick }) {
         } else {
             setSwiperReady(true);
         }
-    }, [memories]);
+    }, [sharedMemories]);
 
     if (loading) {
         return (
             <div className="loading-container">
                 <div className="spinner"></div>
-                <p>Loading your memories...</p>
+                <p>Loading shared memories...</p>
             </div>
         );
     }
@@ -190,41 +190,14 @@ function Home({ userData, handleLogout, navigateTo, onMemoryClick }) {
         );
     }
 
-    if (memories.length === 0) {
+    if (sharedMemories.length === 0) {
         return (
-            <div className="visual-diary-app">
-                <ResponsiveAppBar
-                    userData={userData}
-                    onLogout={handleLogout}
-                    navigateTo={navigateTo}
-                    currentComponent="Home"
-                />
-
-                <div className="empty-state-container">
-                    <div className="empty-state-content">
-                        <div className="empty-state-illustration">
-                            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                                <path fill="#F0F4FF" d="M40,-58.2C52.1,-48.9,62.4,-38.4,68.7,-25.6C75,-12.8,77.4,2.3,73.5,15.3C69.6,28.3,59.5,39.2,47.1,49.1C34.7,59,20,67.9,2.5,65.1C-15,62.3,-30,47.8,-42.6,35.1C-55.2,22.4,-65.4,11.6,-67.2,-1.1C-69,-13.8,-62.5,-27.6,-52.2,-39.2C-41.9,-50.8,-27.8,-60.3,-12.8,-66.2C2.2,-72.1,17.1,-74.4,27.5,-68.8C37.9,-63.2,43.7,-49.7,51.1,-37.2C58.5,-24.7,67.5,-13.3,69.3,-0.7C71.1,11.9,65.7,23.8,57.3,34.5C48.9,45.2,37.5,54.7,24.7,61.8C11.9,68.9,-2.3,73.6,-15.2,71.3C-28.1,69,-39.7,59.7,-50.2,49.1C-60.7,38.5,-70.1,26.6,-74.1,13.1C-78.1,-0.4,-76.7,-15.4,-68.9,-27.3C-61.1,-39.2,-46.9,-48,-34.1,-58.1C-21.4,-68.2,-10.7,-79.6,1.9,-82.7C14.5,-85.8,29,-80.6,40,-58.2Z" transform="translate(100 100)" />
-                            </svg>
-                            <img src="/images/empty-state.png" alt="No memories" className="empty-state-image" />
-                        </div>
-                        <h2 className="empty-state-title">Your Memory Journey Begins Here</h2>
-                        <p className="empty-state-message">Capture life's precious moments and create your first visual memory</p>
-                        <button
-                            className="create-memory-button"
-                            onClick={() => onMemoryClick('create')}
-                        >
-                            <svg className="plus-icon" viewBox="0 0 24 24">
-                                <path d="M12 4V20M4 12H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                            </svg>
-                            Create Your First Memory
-                        </button>
-                    </div>
-                </div>
+            <div className="empty-state">
+                <h2>No shared memories yet</h2>
+                <p>Memories shared with you will appear here</p>
             </div>
         );
     }
-
 
     return (
         <div className="visual-diary-app">
@@ -232,7 +205,7 @@ function Home({ userData, handleLogout, navigateTo, onMemoryClick }) {
                 userData={userData}
                 onLogout={handleLogout}
                 navigateTo={navigateTo}
-                currentComponent="Home"
+                currentComponent="Shared"
             />
 
             <div className="swiper-container" style={{
@@ -242,23 +215,25 @@ function Home({ userData, handleLogout, navigateTo, onMemoryClick }) {
             }}>
                 <div className="swiper">
                     <div className="swiper-wrapper">
-                        {memories.map((memory) => (
+                        {sharedMemories.map((memory) => (
                             <div className="swiper-slide" key={memory.memory_id}>
                                 <div className="slide-card">
-                                    {/* Options button */}
-                                    <button
-                                        className="memory-options-btn"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            setShowDropdown(showDropdown === memory.memory_id ? null : memory.memory_id);
-                                        }}
-                                    >
-                                        ⋮
-                                    </button>
+                                    {/* Show options button only if user has edit permissions */}
+                                    {permissions[memory.memory_id]?.canEdit && (
+                                        <button
+                                            className="memory-options-btn"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setShowDropdown(showDropdown === memory.memory_id ? null : memory.memory_id);
+                                            }}
+                                        >
+                                            ⋮
+                                        </button>
+                                    )}
 
-                                    {/* Dropdown menu */}
-                                    {showDropdown === memory.memory_id && (
+                                    {/* Dropdown menu - only show if user has edit permissions */}
+                                    {showDropdown === memory.memory_id && permissions[memory.memory_id]?.canEdit && (
                                         <div className="memory-options-dropdown">
                                             <button onClick={(e) => {
                                                 e.preventDefault();
@@ -269,11 +244,9 @@ function Home({ userData, handleLogout, navigateTo, onMemoryClick }) {
                                             }}>
                                                 Share
                                             </button>
-                                            {userData && userData.userId === memory.user_id && (
-                                                <button onClick={(e) => handleDeleteClick(memory, e)}>
-                                                    Delete
-                                                </button>
-                                            )}
+                                            <button onClick={(e) => handleDeleteClick(memory, e)}>
+                                                Delete
+                                            </button>
                                         </div>
                                     )}
 
@@ -296,6 +269,14 @@ function Home({ userData, handleLogout, navigateTo, onMemoryClick }) {
                                             <h5>{memory.title}</h5>
                                             <div className="memory-meta">
                                                 <span className="date d-block text-muted small">{memory.formattedDate}</span>
+                                                <span className="shared-by d-block text-muted small">
+                                                    Shared by: {memory.owner_username || 'Unknown'}
+                                                </span>
+                                                {permissions[memory.memory_id] && (
+                                                    <span className={`permission-badge ${permissions[memory.memory_id].canEdit ? 'editor' : 'viewer'}`}>
+                                                        {permissions[memory.memory_id].canEdit ? 'Editor' : 'Viewer'}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -389,4 +370,4 @@ function Home({ userData, handleLogout, navigateTo, onMemoryClick }) {
     );
 }
 
-export default Home;
+export default SharedMemory;

@@ -98,7 +98,7 @@ export const addMemorySection = async (req, res) => {
 export const getMemories = async (req, res) => {
   try {
     console.log('Fetching memories for user:', req.user.userId);
-    
+
     const [memories] = await pool.query(
       `SELECT 
         m.*,
@@ -198,7 +198,7 @@ export const getUserMemories = async (req, res) => {
   try {
     // Use req.params.userId if it exists, otherwise use req.user.userId
     const userId = req.params.userId || req.user.userId;
-    
+
     if (!userId) {
       return res.status(400).json({ message: 'User ID is required' });
     }
@@ -284,7 +284,8 @@ export const shareMemory = async (req, res) => {
 
 export const getSharedMemories = async (req, res) => {
   try {
-    const [memories] = await pool.query(
+    // Use proper variable names - don't destructure the query result immediately
+    const [sharedMemories] = await pool.query(
       `SELECT 
         m.*, 
         u.username as owner_username,
@@ -297,17 +298,27 @@ export const getSharedMemories = async (req, res) => {
       [req.user.userId]
     );
 
-    const formattedMemories = memories.map(memory => ({
+    // Format the response properly
+    const formattedMemories = sharedMemories.map(memory => ({
       ...memory,
       formattedDate: new Date(memory.memory_date).toLocaleDateString('en-GB', {
         day: 'numeric', month: 'short', year: 'numeric'
       })
     }));
 
-    res.json(formattedMemories);
+    res.json({
+      memories: formattedMemories,
+      permissions: sharedMemories.reduce((acc, memory) => {
+        acc[memory.memory_id] = { canEdit: memory.can_edit };
+        return acc;
+      }, {})
+    });
   } catch (error) {
     console.error('Error fetching shared memories:', error);
-    res.status(500).json({ message: 'Failed to fetch shared memories', error: error.message });
+    res.status(500).json({ 
+      message: 'Failed to fetch shared memories', 
+      error: error.message 
+    });
   }
 };
 
