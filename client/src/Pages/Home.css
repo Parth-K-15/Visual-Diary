@@ -31,7 +31,6 @@ body {
     border-bottom: 3px solid red;
 }
 
-
 .swiper {
     width: 100%;
     height: 100%;
@@ -45,31 +44,46 @@ body {
     box-shadow: 6px 7px 8px -7px #8a93fb;
     margin: 35px 33px 50px;
     /* padding: 45px 63px; */
-    padding: 25px 10px 35px 10px;
+    padding: 10px 10px 35px 10px;
     border-radius: 20px;
     border: 0;
     cursor: grab;
     height: 85%;
     width: 80%;
-    
+}
+
+.slide-card .image-container {
+    /* height: 420px;  */
+    height: 85%; /* Match original height */
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    margin: 15px auto 0;
 }
 
 .slide-card .slide-card-img-top {
-    /* max-height: 350px;
-    max-width: 400px; */
-    border-radius: 5%;
-    margin: 15px auto 0;
-    box-shadow: 0 8px 20px -4px #8a86e8;
     width: 85%;
     height: 95%;
-    /* object-fit: cover; */
+    object-fit: cover; /* This is crucial */
+    border-radius: 5%;
+    box-shadow: 0 8px 20px -4px #8a86e8;
+}
+
+/* Memory link styling */
+.slide-card .memory-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    height: 100%;
 }
 
 .slide-card h5 {
     color: #3345c6;
     font-size: 25px;
     font-weight: 700;
-    margin: 15px 0 5px 0;
+    margin: 10px 0 5px 0;
 }
 
 .slide-card a{
@@ -103,4 +117,136 @@ body {
 /* transform active card  */
 .swiper-slide.swiper-slide-active {
     transform: scale(1.2);
+}
+
+
+/* Options Button */
+.memory-options-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: bold;
+  }
+  
+  .memory-options-btn:hover {
+    background: rgba(205, 227, 241, 0.8);
+  }
+  
+  /* Dropdown Menu */
+  .memory-options-dropdown {
+    position: absolute;
+    top: 45px;
+    right: 10px;
+    background: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 11;
+    overflow: hidden;
+  }
+  
+  .memory-options-dropdown button {
+    display: block;
+    width: 100%;
+    padding: 8px 16px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+  }
+  
+  .memory-options-dropdown button:hover {
+    background: #f0f0f0;
+  }
+  
+  /* Share Modal */
+  .share-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .share-modal .modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    max-width: 500px;
+    width: 90%;
+  }
+  
+  .share-options {
+    margin: 1.5rem 0;
+  }
+  
+  .share-option {
+    margin-bottom: 1rem;
+  }
+  
+  .share-option label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+  }
+  
+  .share-option select,
+  .share-option input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  .share-btn {
+    background-color: #4CAF50;
+    color: white;
+  }
+
+
+@media (max-width: 768px) {
+    .slide-card {
+        width: 90%;
+        margin: 35px auto;
+        height: 80%;
+    }
+    
+    .slide-card .slide-card-img-top {
+        height: 95%;
+    }
+    
+    .swiper-slide.swiper-slide-active {
+        transform: scale(1.1); /* Slightly reduce scale on mobile */
+    }
+}
+
+@media (max-width: 480px) {
+    .slide-card {
+        padding: 10px 1px 25px 1px;
+        height: 75%;
+    }
+    
+    .slide-card h5 {
+        font-size: 1.7rem;
+    }
+    
+    .swiper-container {
+        height: 85vh;
+        padding: 0 10px;
+    }
 }

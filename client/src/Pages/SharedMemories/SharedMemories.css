@@ -1,0 +1,45 @@
+.shared-memories-page {
+    min-height: 100vh;
+    background-color: #1c2541;
+    color: white;
+  }
+  
+  .shared-memories-container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .memories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+  
+  .memory-card {
+    background: linear-gradient(90deg,
+      rgba(157, 168, 238, 1) 0%,
+      rgba(205, 227, 241, 1) 39%,
+      rgba(255, 255, 255, 1) 99%);
+    border-radius: 10px;
+    padding: 1rem;
+    color: #333;
+  }
+  
+  .memory-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 5px;
+  }
+  
+  .memory-card h3 {
+    margin: 0.5rem 0;
+    color: #3345c6;
+  }
+  
+  .memory-card p {
+    margin: 0.2rem 0;
+    font-size: 0.9rem;
+  }

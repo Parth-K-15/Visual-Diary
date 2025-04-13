@@ -50,7 +50,7 @@ function App() {
       lastName: response.lastName,
       email: response.email
     });
-    setActiveComponent('AddMemo');
+    setActiveComponent('Home');
   };
 
   const navigateTo = (component) => {

@@ -4,15 +4,21 @@ import { authenticate } from '../middleware/auth.js';
 import {
   createMemory,
   addMemorySection,
-  getMemories
+  getMemories,
+  getPublicMemories,
+  getUserMemories,
+  deleteMemory,
+  shareMemory,
+  getSharedMemories,
+  checkMemoryAccess
 } from '../controllers/memories.js';
 
 const router = express.Router();
 
-// Configure multer to store files in memory
+// Configure multer
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 15 * 1024 * 1024 }, // 15MB limit
+  limits: { fileSize: 15 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
@@ -22,13 +28,16 @@ const upload = multer({
   }
 });
 
-// Create a new memory
+// Routes
 router.post('/', authenticate, upload.single('previewImage'), createMemory);
-
-// Add this route to your existing memory routes
 router.post('/:memoryId/sections', authenticate, upload.single('sectionImage'), addMemorySection);
-
-// Get all memories for user
 router.get('/', authenticate, getMemories);
+router.get('/public', getPublicMemories);
+
+// Fix the optional parameter route - two separate routes instead of using ?
+router.get('/user', authenticate, getUserMemories);
+router.get('/user/:userId', authenticate, getUserMemories);
+router.delete('/:memoryId', authenticate, deleteMemory);
+router.post('/:memoryId/share', authenticate, shareMemory);
 
 export default router;

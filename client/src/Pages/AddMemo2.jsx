@@ -299,7 +299,6 @@ function AddMemo2({ memoryId, filenameSafeTitle, onComplete, userData }) {
     };
 
     const handleShare = async () => {
-        debugger;
         if (sections.some(s => !s.image || !s.description)) {
             showMessage("Please fill all sections completely");
             return;
@@ -318,13 +317,9 @@ function AddMemo2({ memoryId, filenameSafeTitle, onComplete, userData }) {
                 throw new Error('Memory ID not found');
             }
 
-            debugger;
-
             // Upload each section
             for (let i = 0; i < sections.length; i++) {
                 const section = sections[i];
-
-                debugger;
                 
                 // Create form data to send
                 const formData = new FormData();
@@ -334,8 +329,6 @@ function AddMemo2({ memoryId, filenameSafeTitle, onComplete, userData }) {
                 formData.append('sectionImage', section.image);
                 formData.append('desiredFilename', `section-${Date.now()}-${i + 1}`);
 
-                debugger;
-
                 const response = await fetch(`http://localhost:5000/api/memories/${memoryId}/sections`, {
                     method: 'POST',
                     headers: {
@@ -343,8 +336,6 @@ function AddMemo2({ memoryId, filenameSafeTitle, onComplete, userData }) {
                     },
                     body: formData
                 });
-
-                debugger;
 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));
