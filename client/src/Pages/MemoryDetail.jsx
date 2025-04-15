@@ -49,7 +49,7 @@ function MemoryDetail({ userData, handleLogout, navigateTo, memoryId, onBack }) 
     const [showShareDialog, setShowShareDialog] = useState(false);
     const [shareEmail, setShareEmail] = useState('');
     const [sharePermission, setSharePermission] = useState('viewer');
-    const [isOwner, setIsOwner] = useState(false);
+    const [canEdit, setCanEdit] = useState(false); // Changed from isOwner to canEdit
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -84,28 +84,31 @@ function MemoryDetail({ userData, handleLogout, navigateTo, memoryId, onBack }) 
     };
 
     useEffect(() => {
+        // In your fetchMemoryDetails function:
         const fetchMemoryDetails = async () => {
             try {
                 setLoading(true);
 
-                const [memoryRes, sectionsRes] = await Promise.all([
-                    axios.get(`http://localhost:5000/api/memories/${memoryId}`, {
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        }
-                    }),
-                    axios.get(`http://localhost:5000/api/memories/${memoryId}/sections`, {
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        }
-                    })
-                ]);
+                // Fetch memory with response headers
+                const memoryRes = await axios.get(`http://localhost:5000/api/memories/${memoryId}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+
+                // Check both ownership and permissions from headers
+                const isOwner = userData?.userId === memoryRes.data?.user_id;
+                const canEdit = isOwner || memoryRes.headers['x-can-edit'] === 'true';
 
                 setMemory(memoryRes.data);
+                setCanEdit(canEdit);
+
+                // Fetch sections
+                const sectionsRes = await axios.get(`http://localhost:5000/api/memories/${memoryId}/sections`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+
                 setSections(sectionsRes.data);
-                setIsOwner(userData?.userId === memoryRes.data?.user_id);
-                setError(null);
             } catch (err) {
+                console.error('Error fetching memory:', err);
                 setError(err.response?.data?.message || err.message || 'Failed to load memory details');
             } finally {
                 setLoading(false);
@@ -134,7 +137,8 @@ function MemoryDetail({ userData, handleLogout, navigateTo, memoryId, onBack }) 
             });
             navigateTo('Home');
         } catch (error) {
-            setError('Failed to delete memory');
+            console.error('Delete error:', error);
+            setError(error.response?.data?.message || 'Failed to delete memory');
         }
     };
 
@@ -156,6 +160,7 @@ function MemoryDetail({ userData, handleLogout, navigateTo, memoryId, onBack }) 
             setShareEmail('');
             setSharePermission('viewer');
         } catch (error) {
+            console.error('Share error:', error);
             setError(error.response?.data?.message || 'Failed to share memory');
         }
     };
@@ -346,7 +351,7 @@ function MemoryDetail({ userData, handleLogout, navigateTo, memoryId, onBack }) 
                                 </Box>
                             </Box>
 
-                            {isOwner && (
+                            {canEdit && (
                                 <Box
                                     sx={{
                                         display: 'flex',
@@ -357,7 +362,14 @@ function MemoryDetail({ userData, handleLogout, navigateTo, memoryId, onBack }) 
                                 >
                                     <motion.div variants={fadeInUp} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                                         <IconButton
-                                            onClick={() => navigateTo('EditMemory', memoryId)}
+                                            onClick={() => {
+                                                if (!userData) {
+                                                    navigateTo('SignIn');
+                                                    return;
+                                                }
+                                                navigateTo('EditMemory', memoryId);
+                                                // setSelectedMemoryId(memoryId); // Ensure memoryId is set
+                                            }}
                                             sx={{
                                                 background: 'linear-gradient(45deg, #4CAF50, #8BC34A)',
                                                 color: 'white',
@@ -404,17 +416,16 @@ function MemoryDetail({ userData, handleLogout, navigateTo, memoryId, onBack }) 
                         </Box>
                     </Fade>
 
-                    {/* Main Content - Reordered to show image first */}
+                    {/* Main Content */}
                     <Grid
                         container
                         spacing={isMobile ? 2 : 4}
                         sx={{
                             mt: 0,
                             flexDirection: 'column'
-                            // flexDirection: isMobile ? 'column' : 'row'
                         }}
                     >
-                        {/* Image Section - Now comes first */}
+                        {/* Image Section */}
                         <Grid item xs={12} md={6}>
                             <Grow in={true} timeout={1000}>
                                 <Card
@@ -530,7 +541,7 @@ function MemoryDetail({ userData, handleLogout, navigateTo, memoryId, onBack }) 
                             </Grow>
                         </Grid>
 
-                        {/* Text Section - Now comes after image */}
+                        {/* Text Section */}
                         <Grid item xs={12} md={6}>
                             <Slide direction={isMobile ? "up" : "right"} in={true} timeout={800}>
                                 <Card

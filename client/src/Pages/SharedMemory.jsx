@@ -77,41 +77,35 @@ function SharedMemory({ userData, handleLogout, navigateTo, onMemoryClick }) {
     useEffect(() => {
         const fetchSharedMemories = async () => {
             try {
-              setLoading(true);
-              setError(null);
-              
-              const response = await axios.get(
-                'http://localhost:5000/api/memories/shared',
-                {
-                  headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    'Accept': 'application/json'
-                  }
-                }
-              );
-          
-              // Destructure the response properly
-              const { memories, permissions } = response.data;
-          
-              const formattedMemories = memories.map(memory => ({
-                ...memory,
-                formattedDate: memory.formattedDate ||
-                  new Date(memory.memory_date).toLocaleDateString('en-GB', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric'
-                  })
-              }));
-          
-              setSharedMemories(formattedMemories);
-              setPermissions(permissions);
-            } catch (err) {
-              console.error('Error fetching shared memories:', err);
-              setError(err.response?.data?.message || 'Failed to load shared memories');
+                setLoading(true);
+                const response = await axios.get(
+                    'http://localhost:5000/api/memories/shared',
+                    {
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                    }
+                );
+
+                const permissions = response.data.permissions || {};
+                setPermissions(permissions);
+
+                const formattedMemories = response.data.memories.map(memory => ({
+                    ...memory,
+                    canEdit: permissions[memory.memory_id]?.canEdit || false,
+                    formattedDate: new Date(memory.memory_date).toLocaleDateString('en-GB', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                    })
+                }));
+
+                setSharedMemories(formattedMemories);
+            } catch (error) {
+                console.error('Error fetching shared memories:', error);
+                setError(error.response?.data?.message || 'Failed to load shared memories');
             } finally {
-              setLoading(false);
+                setLoading(false);
             }
-          };
+        };
 
         if (userData) {
             fetchSharedMemories();
@@ -235,6 +229,15 @@ function SharedMemory({ userData, handleLogout, navigateTo, onMemoryClick }) {
                                     {/* Dropdown menu - only show if user has edit permissions */}
                                     {showDropdown === memory.memory_id && permissions[memory.memory_id]?.canEdit && (
                                         <div className="memory-options-dropdown">
+                                            <button onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                console.log('Attempting to navigate to edit memory:', memory.memory_id);
+                                                navigateTo('EditMemory', memory.memory_id);
+                                                setShowDropdown(null);
+                                            }}>
+                                                Edit
+                                            </button>
                                             <button onClick={(e) => {
                                                 e.preventDefault();
                                                 e.stopPropagation();

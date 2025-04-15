@@ -44,6 +44,7 @@ import SignUp from './components/SignUp';
 import SignIn from './components/SignIn';
 import MemoryDetail from './Pages/MemoryDetail';
 import SharedMemory from './Pages/SharedMemory'; // Add this import
+import EditMemory from './Pages/EditMemory';
 
 function App() {
   const [activeComponent, setActiveComponent] = useState('ProductHowItWorks');
@@ -170,10 +171,14 @@ function App() {
             />
           )}
 
-          {activeComponent === 'Traditional' && (
-            <Traditional
+          {activeComponent === 'EditMemory' && (
+            <EditMemory
               {...sharedProps}
-              currentComponent="Traditional"
+              memoryId={selectedMemoryId}
+              onBack={() => navigateTo('MemoryDetail', selectedMemoryId)}
+              onComplete={(updatedMemoryId) => {
+                navigateTo('MemoryDetail', updatedMemoryId || selectedMemoryId);
+              }}
             />
           )}
         </>

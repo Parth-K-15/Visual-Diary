@@ -11,6 +11,7 @@ import {
   shareMemory,
   getSharedMemories,
   checkMemoryAccess,
+  updateMemorySection,
   getMemorySections  // Add this import
 } from '../controllers/memories.js';
 import pool from '../config/db.js';
@@ -84,5 +85,13 @@ router.get('/:memoryId/sections', authenticate, checkMemoryAccess, async (req, r
     });
   }
 });
+
+// Add this with your other routes
+router.put(
+  '/:memoryId/sections/:sectionId',
+  authenticate,
+  upload.single('sectionImage'),
+  updateMemorySection
+);
 
 export default router;

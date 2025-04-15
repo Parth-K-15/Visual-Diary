@@ -399,3 +399,73 @@ export const deleteMemory = async (req, res) => {
     });
   }
 };
+
+export const updateMemorySection = async (req, res) => {
+  try {
+    const { memoryId, sectionId } = req.params;
+    const { sectionNumber, description, caption } = req.body;
+    const userId = req.user.userId;
+
+    // Verify memory belongs to user
+    const [memory] = await pool.query(
+      `SELECT user_id FROM memories WHERE memory_id = ?`,
+      [memoryId]
+    );
+
+    if (!memory.length || memory[0].user_id !== userId) {
+      return res.status(403).json({ message: 'Not authorized to update this memory' });
+    }
+
+    let updateData = {
+      description,
+      caption,
+      section_number: sectionNumber
+    };
+
+    // Handle image upload if provided
+    if (req.file) {
+      const imageBase64 = req.file.buffer.toString('base64');
+      const { public_id, url } = await uploadToCloudinary(
+        `data:${req.file.mimetype};base64,${imageBase64}`,
+        {
+          folder: `users/${userId}/memories/${memoryId}/sections`,
+          public_id: req.body.desiredFilename?.split('.')[0],
+          filename_override: req.body.desiredFilename,
+          unique_filename: false
+        }
+      );
+
+      updateData.image_url = url;
+      updateData.cloudinary_image_id = public_id;
+    }
+
+    // Update section in database
+    await pool.query(
+      `UPDATE memory_sections SET 
+        section_number = ?,
+        ${req.file ? 'image_url = ?, cloudinary_image_id = ?,' : ''}
+        description = ?,
+        caption = ?
+       WHERE section_id = ? AND memory_id = ?`,
+      [
+        updateData.section_number,
+        ...(req.file ? [updateData.image_url, updateData.cloudinary_image_id] : []),
+        updateData.description,
+        updateData.caption,
+        sectionId,
+        memoryId
+      ]
+    );
+
+    res.status(200).json({
+      message: 'Section updated successfully',
+      ...(req.file && { imageUrl: updateData.image_url })
+    });
+  } catch (error) {
+    console.error('Error updating section:', error);
+    res.status(500).json({
+      message: 'Failed to update section',
+      error: error.message
+    });
+  }
+};

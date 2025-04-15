@@ -263,6 +263,14 @@ function Home({ userData, handleLogout, navigateTo, onMemoryClick }) {
                                             <button onClick={(e) => {
                                                 e.preventDefault();
                                                 e.stopPropagation();
+                                                navigateTo('EditMemory', memory.memory_id);
+                                                setShowDropdown(null);
+                                            }}>
+                                                Edit
+                                            </button>
+                                            <button onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
                                                 setMemoryToShare(memory);
                                                 setShowShareModal(true);
                                                 setShowDropdown(null);
